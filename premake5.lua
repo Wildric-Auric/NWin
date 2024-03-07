@@ -20,7 +20,8 @@ workspace "NWin"
 	location "./"
 	project "Window"
 	includedirs {
-		"src/"
+		"src/",
+		"vendor/GLEW/include"
 	}
 	files {
 		"src/*.cpp",
@@ -28,7 +29,14 @@ workspace "NWin"
 		"src/*.hpp",
 		"premake5.lua"
 	}
+	defines {
+		"GLEW_STATIC"
+	}
 	links {
+		"vendor/GLEW/lib/Release/x64/glew32s.lib",
+		"opengl32.lib",
+		"gdi32.lib",
+		"glu32.lib",
 		"dwmapi.lib"
 	}
 	filter "configurations:Release"
