@@ -1,7 +1,7 @@
 #pragma once
 #include <cinttypes>
-#include "util.h"
 #include <unordered_map>
+#include "util.h"
 
 
 namespace NWin {
@@ -11,8 +11,10 @@ namespace NWin {
 
 typedef void* winHandle;
 typedef void* MsgBuffer;
-typedef void(*sigResizeCallback)(winHandle);
+typedef void* deviceContextHandle;
 
+typedef void(*sigResizeCallback)(winHandle);
+typedef void(*sigDrawCallback)(winHandle);
 
 
 enum class WindowStyle : Word {
@@ -20,7 +22,8 @@ enum class WindowStyle : Word {
 };
 
 enum class WindowExStyle {
-	Default = 0x02000000L
+	Default = 0 //0x00000020L | 0x02000000L //Transparent | Composited
+
 };
 
 
@@ -35,10 +38,11 @@ struct WindowCrtInfo {
 
 class Window {
 private:
-	uint64_t  _id      = 0;
-	winHandle _handle  = nullptr;
-	MsgBuffer _msgBuff = nullptr;
-	bool _shouldLoop   = 1;
+	uint64_t  _id					= 0;
+	winHandle _handle				= nullptr;
+	deviceContextHandle _dcHandle	= nullptr;
+	MsgBuffer _msgBuff			    = nullptr;
+	bool _shouldLoop			    = 1;
 
 	static std::unordered_map<winHandle, Window> _windowsMap;
 	static uint64_t _incID;
@@ -49,13 +53,18 @@ public:
 	Window(const Window&)		     = delete;
 	Window& operator=(const Window&) = delete;
 
-	winHandle _getHandle();
+	winHandle			_getHandle();
+	deviceContextHandle _getDcHandle();
+	Vec2 getDrawAreaSize();
 	int  update();
+	int  swapBuffers();
 	int	 destroy();
 	bool shouldLoop();
 
 	//Callback function----------
-	sigResizeCallback resizeCallback = nullptr;
+	sigResizeCallback resizeCallback  = nullptr;
+	sigDrawCallback   drawCallback	  = nullptr;
+	sigDrawCallback   gdiDrawCallback = nullptr;
 	//Static---------------------
 	static Window*  stGetWindow(winHandle handle);
 	static Window*	stCreateWindow(WindowCrtInfo& crtInfo);

@@ -2,6 +2,7 @@
 #include <string>
 #include<Windows.h>
 #include<winuser.h>
+#include <winres.h>
 
 typedef LONG_PTR  (*__stdcall win_proc_ptr)(HWND, UINT, WPARAM, LPARAM);
 
@@ -23,19 +24,26 @@ static LONG_PTR CALLBACK defaultWinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 	Window* win = Window::stGetWindow((winHandle)hwnd);
 	switch (uMsg)
 	{
-		case WM_PAINT:
-		{
-			PAINTSTRUCT ps;
-			HDC hdc = BeginPaint(hwnd, &ps);
-			// All painting occurs here, between BeginPaint and EndPaint.
-			uint8_t br = 10; uint8_t bg = 10; uint8_t bb = 20;
-			HBRUSH bgBrush = CreateSolidBrush((0 << 24) | (bb << 16) | (bg << 8) | br);
-			FillRect(hdc, &ps.rcPaint, bgBrush);
-			EndPaint(hwnd, &ps);
-		}
+		//case WM_PAINT:
+		//{
+		//	PAINTSTRUCT ps;
+		//	NWIN_CALL_CALL_BACK(win->drawCallback, (winHandle)win->_getHandle());
+		//	HDC hdc = BeginPaint(hwnd, &ps); 
+		//		//NWIN_CALL_CALL_BACK(win->gdiDrawCallback, (winHandle)hwnd); //Weird behaviour when using gdi along with opengl
+		//		//uint8_t br = 255; uint8_t bg = 10; uint8_t bb = 20;
+		//		//HBRUSH bgBrush = CreateSolidBrush((0 << 24) | (bb << 16) | (bg << 8) | br);
+		//		//ps.rcPaint.left   = 0;
+		//		//ps.rcPaint.top    = 0;
+		//		//ps.rcPaint.bottom = 65;
+		//		//ps.rcPaint.right  = 64;
+		//		//FillRect(hdc, &ps.rcPaint, bgBrush);
+		//	EndPaint(hwnd, &ps);
+		//	return 0;
+		//}
 
 		case WM_SIZE: {
 			NWIN_CALL_CALL_BACK(win->resizeCallback, (winHandle)hwnd);
+			//NWIN_CALL_CALL_BACK(win->drawCallback, (winHandle)win->_getHandle());
 			return 0;
 		};
 		case WM_DESTROY: {
@@ -43,8 +51,6 @@ static LONG_PTR CALLBACK defaultWinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 			PostQuitMessage(0);
 			return 0;
 		}
-
-			return 0;
 	}
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
@@ -61,6 +67,13 @@ int Window::update() {
 		TranslateMessage((LPMSG)_msgBuff);
 		DispatchMessage((LPMSG)_msgBuff);
 	}
+	NWIN_CALL_CALL_BACK(drawCallback, (winHandle)_handle);
+
+	return 1;
+}
+
+int Window::swapBuffers() {
+	WIN_CHECK21(SwapBuffers((HDC)_dcHandle), return 0;);
 	return 1;
 }
 
@@ -82,13 +95,12 @@ Window* Window::stCreateWindow(WindowCrtInfo& crtInfo) {
 	wc.lpfnWndProc = crtInfo.customWindowProcPtr != nullptr ? 
 					(win_proc_ptr)(crtInfo.customWindowProcPtr)
 					: &defaultWinProc;
-	
 	wc.hInstance = moduleInstance;
+	wc.hCursor   = LoadCursor(NULL, IDC_ARROW);
 	
 	RegisterClass(&wc);
 	
 	getWinRect(crtInfo.metrics,winRect);
-	
 	WIN_CHECK(h = CreateWindowExA(crtInfo.exStyle, 
 								  nameID, crtInfo.description, 
 								  crtInfo.style, crtInfo.metrics.pos.x, crtInfo.metrics.pos.y, 
@@ -100,15 +112,15 @@ Window* Window::stCreateWindow(WindowCrtInfo& crtInfo) {
 	win._handle = h;
 	win._msgBuff = new MSG;
 	win._id = _incID;
+	win._dcHandle = GetDC((HWND)h);
+	auto a = GetLastError();
+	WIN_CHECK(win._dcHandle);
+	 a = GetLastError();
 
+	//Set winapi parameterss
+	ShowWindow((HWND)h, SW_SHOWDEFAULT); //Returns false if the window isn't visible already; does not return error directly
+	//WIN_CHECK(SetLayeredWindowAttributes((HWND)h, RGB(255, 0, 0), 100, LWA_ALPHA)); Only if WS_TRANSPARENT is set
 
-
-
-	//Set winapi parameters
-	ShowWindow((HWND)h, SW_SHOWDEFAULT);
-	SetLayeredWindowAttributes((HWND)h, RGB(255, 0, 0), 100, LWA_ALPHA);
-
-	
 	return &win;
 }
 
@@ -125,6 +137,16 @@ int Window::destroy() {
 
 winHandle Window::_getHandle() {
 	return _handle;
+}
+
+deviceContextHandle Window::_getDcHandle() {
+	return _dcHandle;
+}
+
+Vec2 Window::getDrawAreaSize() {
+	RECT rec{};
+	GetClientRect((HWND)_handle, &rec);
+	return Vec2{ rec.right - rec.left, rec.bottom - rec.top,  };
 }
 
 
