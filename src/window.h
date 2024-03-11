@@ -22,8 +22,7 @@ enum class WindowStyle : Word {
 };
 
 enum class WindowExStyle {
-	Default = 0 //0x00000020L | 0x02000000L //Transparent | Composited
-
+	Default = 0x00000020L | 0x02000000L //Transparent | Composited
 };
 
 
@@ -60,14 +59,15 @@ public:
 	int  swapBuffers();
 	int	 destroy();
 	bool shouldLoop();
-
+	//Callback setters
 	void setResizeCallback(procResizeCallback);
 	void setDrawCallback(procDrawCallback);
 	void setGdiDrawCallback(procDrawCallback);
-
-
+	//DWM
+	bool dwmBlur();					     //Not working; it should blur the background though
+	bool dwmDarkModeFrame(bool flag);	 //if the flag is set on true, the window uses user's theme for its frame (non client area) color; otherwise, it is white.
+	bool dwmDontRoundCorners(bool flag); //if the flag is set on true, window's corners are not rounded, otherwise the system chooses
 	
-
 
 	//Callback function----------
 	procResizeCallback resizeCallback  = nullptr;

@@ -3,8 +3,19 @@
 #include<Windows.h>
 #include<winuser.h>
 #include <winres.h>
+#include <dwmapi.h>
 
 typedef LONG_PTR  (*__stdcall win_proc_ptr)(HWND, UINT, WPARAM, LPARAM);
+
+#define DWMWA_USE_IMMERSIVE_DARK_MODE 20
+#define DWMWA_WINDOW_CORNER_PREFERENCE 33
+
+typedef enum {
+	DWMWCP_DEFAULT = 0,
+	DWMWCP_DONOTROUND = 1,
+	DWMWCP_ROUND = 2,
+	DWMWCP_ROUNDSMALL = 3
+} DWM_WINDOW_CORNER_PREFERENCE;
 
 
 namespace NWin {
@@ -24,6 +35,14 @@ static LONG_PTR CALLBACK defaultWinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 	Window* win = Window::stGetWindow((winHandle)hwnd);
 	switch (uMsg)
 	{
+		case WM_PAINT:
+		{
+			PAINTSTRUCT ps;
+			HDC hdc = BeginPaint(hwnd, &ps);
+			EndPaint(hwnd, &ps);
+			ReleaseDC((HWND)win->_getHandle(), hdc);
+			return 0;
+		}
 		case WM_SIZE: {
 			NWIN_CALL_CALL_BACK(win->resizeCallback, (winHandle)hwnd, {0,0}); //Get size from lparam or wparam; read doc
 			NWIN_CALL_CALL_BACK(win->drawCallback, (winHandle)hwnd);
@@ -50,8 +69,7 @@ int Window::update() {
 		TranslateMessage((LPMSG)_msgBuff);
 		DispatchMessage((LPMSG)_msgBuff);
 	}
-	NWIN_CALL_CALL_BACK(drawCallback, (winHandle)_handle);
-
+	NWIN_CALL_CALL_BACK(drawCallback, (winHandle)_handle)
 	return 1;
 }
 
@@ -140,6 +158,7 @@ deviceContextHandle Window::_getDcHandle() {
 	return _dcHandle;
 }
 
+
 Vec2 Window::getDrawAreaSize() {
 	RECT rec{};
 	GetClientRect((HWND)_handle, &rec);
@@ -168,6 +187,34 @@ bool	Window::stInvalidate(Window* window) {
 	return 1;
 }
 
+bool Window::dwmBlur() {
+	HRESULT hr = S_OK;
+	DWM_BLURBEHIND bb = { 0 };
+
+	bb.dwFlags = DWM_BB_ENABLE;
+	bb.fEnable = true;
+	bb.hRgnBlur = NULL;
+
+	// Enable blur-behind.
+	hr = DwmEnableBlurBehindWindow((HWND)_handle, &bb);
+	if (!SUCCEEDED(hr)) {
+		display("-----------------\n WARNING: Could not enable DMA blur \n----------------- ");
+	}
+	return SUCCEEDED(hr);
+}
+
+bool Window::dwmDarkModeFrame(bool flag) {
+	BOOL val = flag;
+	HRESULT res = DwmSetWindowAttribute((HWND)_handle, DWMWA_USE_IMMERSIVE_DARK_MODE, &val, sizeof(val));
+	return SUCCEEDED(res);
+}
+
+bool Window::dwmDontRoundCorners(bool flag) {
+	DWM_WINDOW_CORNER_PREFERENCE val = flag ? DWM_WINDOW_CORNER_PREFERENCE::DWMWCP_DONOTROUND 
+										    : DWM_WINDOW_CORNER_PREFERENCE::DWMWCP_DEFAULT;	
+	HRESULT res = DwmSetWindowAttribute((HWND)_handle, DWMWA_WINDOW_CORNER_PREFERENCE, &val, sizeof(val));
+	return SUCCEEDED(res);
+}
 
 
 //bool stShouldUpdate(winHandle* handle);
