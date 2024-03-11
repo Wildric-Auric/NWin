@@ -13,8 +13,8 @@ typedef void* winHandle;
 typedef void* MsgBuffer;
 typedef void* deviceContextHandle;
 
-typedef void(*sigResizeCallback)(winHandle);
-typedef void(*sigDrawCallback)(winHandle);
+typedef void(*procResizeCallback)(winHandle, Vec2 newSize);
+typedef void(*procDrawCallback)(winHandle);
 
 
 enum class WindowStyle : Word {
@@ -32,8 +32,8 @@ struct WindowCrtInfo {
 	char* description         = nullptr;
 	Rect  metrics{};
 	void* customWindowProcPtr = nullptr;
-	Word   style	  = (Word)WindowStyle::Default;
-	Word   exStyle    = (Word)WindowExStyle::Default;
+	Word  style				  = (Word)WindowStyle::Default;
+	Word  exStyle			  = (Word)WindowExStyle::Default;
 };
 
 class Window {
@@ -61,10 +61,18 @@ public:
 	int	 destroy();
 	bool shouldLoop();
 
+	void setResizeCallback(procResizeCallback);
+	void setDrawCallback(procDrawCallback);
+	void setGdiDrawCallback(procDrawCallback);
+
+
+	
+
+
 	//Callback function----------
-	sigResizeCallback resizeCallback  = nullptr;
-	sigDrawCallback   drawCallback	  = nullptr;
-	sigDrawCallback   gdiDrawCallback = nullptr;
+	procResizeCallback resizeCallback  = nullptr;
+	procDrawCallback   drawCallback	  = nullptr;
+	procDrawCallback   gdiDrawCallback = nullptr;
 	//Static---------------------
 	static Window*  stGetWindow(winHandle handle);
 	static Window*	stCreateWindow(WindowCrtInfo& crtInfo);
@@ -73,7 +81,7 @@ public:
 	static bool		Window::stInvalidate(winHandle handle);
 	static bool		Window::stInvalidate(Window* window);
 
-
+	static Window* _stCreateRawWindow(WindowCrtInfo& crtInfo);
 	/*static bool	stShouldUpdate(Window* window);
 	static bool		stShouldUpdate(winHandle* handle);*/
 

@@ -24,26 +24,9 @@ static LONG_PTR CALLBACK defaultWinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 	Window* win = Window::stGetWindow((winHandle)hwnd);
 	switch (uMsg)
 	{
-		//case WM_PAINT:
-		//{
-		//	PAINTSTRUCT ps;
-		//	NWIN_CALL_CALL_BACK(win->drawCallback, (winHandle)win->_getHandle());
-		//	HDC hdc = BeginPaint(hwnd, &ps); 
-		//		//NWIN_CALL_CALL_BACK(win->gdiDrawCallback, (winHandle)hwnd); //Weird behaviour when using gdi along with opengl
-		//		//uint8_t br = 255; uint8_t bg = 10; uint8_t bb = 20;
-		//		//HBRUSH bgBrush = CreateSolidBrush((0 << 24) | (bb << 16) | (bg << 8) | br);
-		//		//ps.rcPaint.left   = 0;
-		//		//ps.rcPaint.top    = 0;
-		//		//ps.rcPaint.bottom = 65;
-		//		//ps.rcPaint.right  = 64;
-		//		//FillRect(hdc, &ps.rcPaint, bgBrush);
-		//	EndPaint(hwnd, &ps);
-		//	return 0;
-		//}
-
 		case WM_SIZE: {
-			NWIN_CALL_CALL_BACK(win->resizeCallback, (winHandle)hwnd);
-			//NWIN_CALL_CALL_BACK(win->drawCallback, (winHandle)win->_getHandle());
+			NWIN_CALL_CALL_BACK(win->resizeCallback, (winHandle)hwnd, {0,0}); //Get size from lparam or wparam; read doc
+			NWIN_CALL_CALL_BACK(win->drawCallback, (winHandle)hwnd);
 			return 0;
 		};
 		case WM_DESTROY: {
@@ -73,18 +56,31 @@ int Window::update() {
 }
 
 int Window::swapBuffers() {
-	WIN_CHECK21(SwapBuffers((HDC)_dcHandle), return 0;);
+	//WIN_CHECK21(SwapBuffers((HDC)_dcHandle), return 0;); //Should it work?
+	WIN_CHECK(wglSwapLayerBuffers((HDC)_dcHandle,0)); //TODO::Check this funciton doc
 	return 1;
 }
 
-Window* Window::stCreateWindow(WindowCrtInfo& crtInfo) {
+void Window::setResizeCallback(procResizeCallback p) {
+	resizeCallback = p;
+}
+void Window::setDrawCallback(procDrawCallback p) {
+	drawCallback = p;
+}
+void Window::setGdiDrawCallback(procDrawCallback p) {
+	gdiDrawCallback = p;
+}
 
+Window* Window::_stCreateRawWindow(WindowCrtInfo& crtInfo) {
+	return nullptr;
+}
+
+Window* Window::stCreateWindow(WindowCrtInfo& crtInfo) {
 	HINSTANCE moduleInstance;
 	LPCTSTR nameID;
 	WNDCLASS wc{};
 	RECT  winRect{};
 	HANDLE h;
-
 
 	h = NULL;
 
@@ -92,19 +88,19 @@ Window* Window::stCreateWindow(WindowCrtInfo& crtInfo) {
 	std::string tempN = (std::string("_NWin_") + std::to_string(GET_NEW_ID));
 	nameID = tempN.c_str();
 	wc.lpszClassName = nameID;
-	wc.lpfnWndProc = crtInfo.customWindowProcPtr != nullptr ? 
-					(win_proc_ptr)(crtInfo.customWindowProcPtr)
-					: &defaultWinProc;
+	wc.lpfnWndProc = crtInfo.customWindowProcPtr != nullptr ?
+		(win_proc_ptr)(crtInfo.customWindowProcPtr)
+		: &defaultWinProc;
 	wc.hInstance = moduleInstance;
-	wc.hCursor   = LoadCursor(NULL, IDC_ARROW);
-	
+	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+
 	RegisterClass(&wc);
-	
-	getWinRect(crtInfo.metrics,winRect);
-	WIN_CHECK(h = CreateWindowExA(crtInfo.exStyle, 
-								  nameID, crtInfo.description, 
-								  crtInfo.style, crtInfo.metrics.pos.x, crtInfo.metrics.pos.y, 
-								  crtInfo.metrics.size.x, crtInfo.metrics.size.y, 0, 0, moduleInstance, 0));
+
+	getWinRect(crtInfo.metrics, winRect);
+	WIN_CHECK(h = CreateWindowExA(crtInfo.exStyle,
+		nameID, crtInfo.description,
+		crtInfo.style, crtInfo.metrics.pos.x, crtInfo.metrics.pos.y,
+		crtInfo.metrics.size.x, crtInfo.metrics.size.y, 0, 0, moduleInstance, 0));
 	if (!h) return nullptr;
 	//Register and initialize members
 	Window::_windowsMap.emplace(h, Window());
@@ -115,13 +111,14 @@ Window* Window::stCreateWindow(WindowCrtInfo& crtInfo) {
 	win._dcHandle = GetDC((HWND)h);
 	auto a = GetLastError();
 	WIN_CHECK(win._dcHandle);
-	 a = GetLastError();
+	a = GetLastError();
 
 	//Set winapi parameterss
 	ShowWindow((HWND)h, SW_SHOWDEFAULT); //Returns false if the window isn't visible already; does not return error directly
 	//WIN_CHECK(SetLayeredWindowAttributes((HWND)h, RGB(255, 0, 0), 100, LWA_ALPHA)); Only if WS_TRANSPARENT is set
 
 	return &win;
+
 }
 
 Window* Window::stGetWindow(winHandle handle) {
