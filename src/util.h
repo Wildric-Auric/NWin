@@ -24,6 +24,8 @@ namespace NWin {
 
 	#define DEFAULT_WINDOW_POSITION_SIZE ((int)0x80000000)
 	typedef unsigned long Word;
+	typedef unsigned char uchar;
+	typedef unsigned int  uint;
 
 	struct Vec2 {
 		int x = 0;
