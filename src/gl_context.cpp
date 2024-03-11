@@ -67,22 +67,24 @@ static void fillpixelFormat(PIXELFORMATDESCRIPTOR& pFormat) {
 }
 
 
-static NWin::Window* www;
-static PixelFormat pf; //TODO::Move this elsewhere
-NWIN_GL_STATUS GlContext::create(Window* w) {
+NWIN_GL_STATUS GlContext::create(Window* w, const OpenGLInfo& info) {
+#define FAKE_WIN_MAX_VER 3
+	PixelFormat	  pf; //TODO::Move this elsewhere
+	NWin::Window* window; //Fake window
 
-	//temp----------------------------
-		www = w;
-		NWin::Window* window;
+	if (info.maxVersion >= FAKE_WIN_MAX_VER) {
+	//Create fake window to init OpenGL
 		NWin::WindowCrtInfo c{};
 		c.metrics.pos = { 0,0 };
-		c.description = "HelloWorld";
+		c.description = "Fake";
 		c.metrics.size = { 480, 360 };
 		window = NWin::Window::stCreateWindow(c);
-	//-------------------------
-
-	_attachedWindow = window;
+	}
+	else {
+		window = w;
+	}
 	
+	_attachedWindow = window;
 	fillpixelFormat(pf.pFormat);
 	
 	
@@ -93,6 +95,46 @@ NWIN_GL_STATUS GlContext::create(Window* w) {
 	WIN_CHECK21(SetPixelFormat((HDC)w->_getDcHandle(), 1, &pf.pFormat), return NWIN_GL_STATUS::SET_PIXEL_FORMAT_FAILURE);
 	//--------------------
 	WIN_CHECK21(_contextHandle = wglCreateContext((HDC)window->_getDcHandle()), return NWIN_GL_STATUS::CONTEXT_CREATION_FAILURE);
+
+	if (info.maxVersion < FAKE_WIN_MAX_VER) 
+		return NWIN_GL_STATUS::NONE;
+
+	//Next steps are for intialisation of modern opengl and destruction of fake window
+	makeCurrent();
+	WIN_CHECK(wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)wglGetProcAddress("wglCreateContextAttribsARB"));
+	WIN_CHECK(wglChoosePixelFormatARB = (PFNWGLCHOOSEPIXELFORMATARBPROC)wglGetProcAddress("wglChoosePixelFormatARB"));
+
+	int attribs[] = {
+	WGL_CONTEXT_MAJOR_VERSION_ARB, info.minVersion,
+	WGL_CONTEXT_MINOR_VERSION_ARB, info.maxVersion, //fix this to 3 so you can't use opengl comp
+	WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+	0x2094, 0x0002, 
+	0 // ,WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB TODO::Define these, it is to disable compatibility
+	};
+
+	int pixelAttribs[] = {
+		WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
+		WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
+		WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
+		WGL_SWAP_METHOD_ARB, WGL_SWAP_COPY_ARB,
+		WGL_PIXEL_TYPE_ARB, WGL_TYPE_RGBA_ARB,
+		WGL_ACCELERATION_ARB, WGL_FULL_ACCELERATION_ARB,
+		WGL_COLOR_BITS_ARB, 32,
+		WGL_ALPHA_BITS_ARB, 8,
+		WGL_DEPTH_BITS_ARB, 24,
+		0
+	};
+
+	window = w; //Get back true window
+	Window::stDestroyWindow(_attachedWindow); //Destroy temp window
+	_attachedWindow = window;
+	HGLRC newC;
+	UINT NUM;
+	WIN_CHECK(wglChoosePixelFormatARB((HDC)_attachedWindow->_getDcHandle(), pixelAttribs, NULL, 1, &pf.choice, &NUM));
+	WIN_CHECK(newC = wglCreateContextAttribsARB((HDC)_attachedWindow->_getDcHandle(), 0, attribs));
+	makeCurrent(1);
+	WIN_CHECK(wglDeleteContext((HGLRC)_contextHandle));
+	_contextHandle = newC;
 
 	return NWIN_GL_STATUS::NONE;
 }
@@ -110,49 +152,5 @@ NWIN_GL_STATUS GlContext::makeCurrent(bool noContext) {
 	return NWIN_GL_STATUS::NONE;
 }
 
-NWIN_GL_STATUS GlContext::initCoreOpenGL() {
-
-	//------
-
-	WIN_CHECK(wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)wglGetProcAddress("wglCreateContextAttribsARB"));
-	WIN_CHECK(wglChoosePixelFormatARB    = (PFNWGLCHOOSEPIXELFORMATARBPROC)   wglGetProcAddress("wglChoosePixelFormatARB"));
-
-	int attribs[] = {
-	WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
-	WGL_CONTEXT_MINOR_VERSION_ARB, 0, //fix this to 3 so you can't use opengl comp
-	WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
-			0x2094, 0x0002, 0 // ,WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB TODO::Define these, it is to disable compatibility
-	};
-
-	int pixelAttribs[] = {
-		WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
-		WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
-		WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
-		WGL_SWAP_METHOD_ARB, WGL_SWAP_COPY_ARB,
-		WGL_PIXEL_TYPE_ARB, WGL_TYPE_RGBA_ARB,
-		WGL_ACCELERATION_ARB, WGL_FULL_ACCELERATION_ARB,
-		WGL_COLOR_BITS_ARB, 32, 
-		WGL_ALPHA_BITS_ARB, 8, 
-		WGL_DEPTH_BITS_ARB, 24,
-		0
-	};
-
-	Window::stDestroyWindow(_attachedWindow);
-	_attachedWindow = www;
-	HGLRC newC;
-	UINT NUM;
-	WIN_CHECK(wglChoosePixelFormatARB((HDC)_attachedWindow->_getDcHandle(), pixelAttribs, NULL, 1,&pf.choice, &NUM))
-	WIN_CHECK(newC = wglCreateContextAttribsARB((HDC)_attachedWindow->_getDcHandle(), 0, attribs));
-	makeCurrent(1); 
-	WIN_CHECK(wglDeleteContext((HGLRC)_contextHandle));
-	_contextHandle = newC;
-	makeCurrent();
-
-
-	int glewInitValue = glewInit();
-	WIN_CHECK_COMPLETE(glewInitValue == GLEW_OK, 0, return NWIN_GL_STATUS::CORE_OPENGL_INIT_FAILURE);
-
-	return NWIN_GL_STATUS::NONE;
-}
 
 }

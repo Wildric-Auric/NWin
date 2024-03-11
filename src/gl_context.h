@@ -6,6 +6,12 @@ namespace NWin {
 
 typedef void* contextHandle;
 
+struct OpenGLInfo {
+	uchar minVersion = 3;
+	uchar maxVersion = 3;
+	//bool  profileCore = 1;
+	bool  disableCompatibility = 1;
+};
 
 enum class NWIN_GL_STATUS {
 	NONE = 0,
@@ -25,9 +31,8 @@ private:
 public:
 
 	bool			isCurrent();
-	NWIN_GL_STATUS	create(Window* window );
+	NWIN_GL_STATUS	create(Window* window, const OpenGLInfo& glInfo);
 	NWIN_GL_STATUS  makeCurrent(bool noContext = 0);
-	NWIN_GL_STATUS  initCoreOpenGL();
 	Window*		    getWindow();
 
 	static GlContext* getCurrent();

@@ -6,7 +6,7 @@
 //#include <GL/GL.h>
 #include <gl/glew.h>
 
-void resize(NWin::winHandle handle) {
+void resize(NWin::winHandle handle, NWin::Vec2 newSize) {
 	//printf("ResizeTest\n");
 }
 
@@ -38,18 +38,26 @@ void draw3(NWin::winHandle h) {
 void sample() {
 	NWin::Window* w;
 	NWin::WindowCrtInfo c{};
+	NWin::OpenGLInfo glInfo;
+	NWin::GlContext context;
+
+
 	c.metrics.pos = { 0,0 };
 	c.description = "HelloWorld";
 	c.metrics.size = { 480, 360 };
 	c.style   = WS_OVERLAPPEDWINDOW;
 	c.exStyle = WS_EX_APPWINDOW;
 	w = NWin::Window::stCreateWindow(c);
-	w->resizeCallback = &resize;
-	w->drawCallback   = &draw3;
-	NWin::GlContext context;
-	context.create(w);
+	w->setDrawCallback(&draw3);
+	w->setResizeCallback(&resize);
+
+
+	glInfo.minVersion = 0;
+	glInfo.maxVersion = 0;
+
+	context.create(w, glInfo);
 	context.makeCurrent();
-	context.initCoreOpenGL();
+	//glewInit(); Using glew does not require upgrading opengl to profile..
 	init();
 	while (w->shouldLoop()) { w->update(); }
 	NWin::Window::stDestroyWindow(w);
