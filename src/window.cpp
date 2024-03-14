@@ -1,5 +1,8 @@
 #include "window.h"
+
 #include <string>
+#include <vector>
+
 #include<Windows.h>
 #include<winuser.h>
 #include <winres.h>
@@ -19,6 +22,10 @@ typedef enum {
 
 
 namespace NWin {
+
+
+Rect defaultWindowMetrics = { 0,0,480,360 };
+
 
 uint64_t Window::_incID = 1;
 std::unordered_map<winHandle, Window> Window::_windowsMap;
@@ -217,6 +224,50 @@ bool Window::dwmDontRoundCorners(bool flag) {
 }
 
 
-//bool stShouldUpdate(winHandle* handle);
-//bool stShouldUpdate(Window* window);
+//TODO::Return if failure
+void Window::disableTitleBar() {
+	DWORD style = GetWindowLong((HWND)_handle, GWL_STYLE);
+	style &= ~WS_OVERLAPPEDWINDOW;
+	WIN_CHECK(SetWindowLong((HWND)_handle, GWL_STYLE, style));
+}
+
+void Window::enableTitleBar() {
+	DWORD style = GetWindowLong((HWND)_handle, GWL_STYLE);
+	style |= WS_OVERLAPPEDWINDOW;
+	WIN_CHECK(SetWindowLong((HWND)_handle, GWL_STYLE, style));
+}
+
+static BOOL  getMonitorCallback(
+	HMONITOR monitorHandle,
+	HDC	   hdc,
+	LPRECT lpRect,
+	LPARAM dwData
+)
+{
+	std::vector<HMONITOR>* temp = ((std::vector<HMONITOR>*)dwData);
+	temp->push_back(monitorHandle);
+	return 1;
+};
+
+
+void getMonitor(HDC dcHandle,std::vector<HMONITOR>& outVector) {
+	WIN_CHECK(EnumDisplayMonitors(NULL, NULL, &getMonitorCallback, (LPARAM)&outVector));
+}
+
+void Window::enableFullscreen() {
+	std::vector<HMONITOR> outVec;
+	getMonitor((HDC)_dcHandle, outVec);
+	MONITORINFO mInfo;
+	mInfo.cbSize = sizeof(mInfo);
+	WIN_CHECK(GetMonitorInfo(outVec[0], &mInfo));
+	Vec2 size = { mInfo.rcMonitor.right - mInfo.rcMonitor.left, mInfo.rcMonitor.bottom - mInfo.rcMonitor.top };
+	WIN_CHECK(SetWindowPos((HWND)_handle, NULL, 0, 0, size.x, size.y, 0));
+	disableTitleBar();
+}
+
+void Window::disableFullscreen(Rect& newMetrics) {
+	enableTitleBar();
+	WIN_CHECK(SetWindowPos((HWND)_handle, NULL, newMetrics.pos.x, newMetrics.pos.y, newMetrics.size.x, newMetrics.size.y, 0));
+}
+
 }

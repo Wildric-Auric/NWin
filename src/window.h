@@ -22,10 +22,11 @@ enum class WindowStyle : Word {
 };
 
 enum class WindowExStyle {
-	Default = 0x00000020L | 0x02000000L //Transparent | Composited
+	Default = 0x00040000L //->WS_EX_APPWINDOW ; ----- 0x00000020L | 0x02000000L //Transparent | Composited
 };
 
 
+extern Rect defaultWindowMetrics;
 
 struct WindowCrtInfo {
 	char* description         = nullptr;
@@ -59,6 +60,14 @@ public:
 	int  swapBuffers();
 	int	 destroy();
 	bool shouldLoop();
+	//Styles setters
+	void disableTitleBar();
+	void enableTitleBar();
+
+	void enableFullscreen();
+	void disableFullscreen(Rect& newMetrics = defaultWindowMetrics);
+	
+
 	//Callback setters
 	void setResizeCallback(procResizeCallback);
 	void setDrawCallback(procDrawCallback);
