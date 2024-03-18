@@ -43,6 +43,7 @@ private:
 	deviceContextHandle _dcHandle	= nullptr;
 	MsgBuffer _msgBuff			    = nullptr;
 	bool _shouldLoop			    = 1;
+	Word _style						= 0; //Mainly to enable and disable title bar
 
 	static std::unordered_map<winHandle, Window> _windowsMap;
 	static uint64_t _incID;
@@ -93,7 +94,6 @@ public:
 	static Window* _stCreateRawWindow(WindowCrtInfo& crtInfo);
 	/*static bool	stShouldUpdate(Window* window);
 	static bool		stShouldUpdate(winHandle* handle);*/
-
 	};
 
 }

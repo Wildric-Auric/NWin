@@ -42,6 +42,13 @@ static LONG_PTR CALLBACK defaultWinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 	Window* win = Window::stGetWindow((winHandle)hwnd);
 	switch (uMsg)
 	{
+		case WM_CREATE: 
+		{
+			RECT rcClient;
+			GetWindowRect(hwnd, &rcClient);
+			SetWindowPos(hwnd, NULL, rcClient.left, rcClient.top, rcClient.right - rcClient.left, rcClient.bottom -rcClient.top, SWP_FRAMECHANGED);
+			return 0;
+		}
 		case WM_PAINT:
 		{
 			PAINTSTRUCT ps;
@@ -51,6 +58,7 @@ static LONG_PTR CALLBACK defaultWinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 			return 0;
 		}
 		case WM_SIZE: {
+			if (win == nullptr) return 0;
 			NWIN_CALL_CALL_BACK(win->resizeCallback, (winHandle)hwnd, {0,0}); //Get size from lparam or wparam; read doc
 			NWIN_CALL_CALL_BACK(win->drawCallback, (winHandle)hwnd);
 			return 0;
@@ -116,9 +124,10 @@ Window* Window::stCreateWindow(WindowCrtInfo& crtInfo) {
 	wc.lpfnWndProc = crtInfo.customWindowProcPtr != nullptr ?
 		(win_proc_ptr)(crtInfo.customWindowProcPtr)
 		: &defaultWinProc;
-	wc.hInstance = moduleInstance;
-	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-
+	wc.hInstance	 = moduleInstance;
+	wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
+	wc.hCursor	     = LoadCursor(NULL, IDC_ARROW);
+	
 	RegisterClass(&wc);
 
 	getWinRect(crtInfo.metrics, winRect);
@@ -134,6 +143,7 @@ Window* Window::stCreateWindow(WindowCrtInfo& crtInfo) {
 	win._msgBuff = new MSG;
 	win._id = _incID;
 	win._dcHandle = GetDC((HWND)h);
+	win._style    = crtInfo.style;
 	auto a = GetLastError();
 	WIN_CHECK(win._dcHandle);
 	a = GetLastError();
@@ -143,7 +153,6 @@ Window* Window::stCreateWindow(WindowCrtInfo& crtInfo) {
 	//WIN_CHECK(SetLayeredWindowAttributes((HWND)h, RGB(255, 0, 0), 100, LWA_ALPHA)); Only if WS_TRANSPARENT is set
 
 	return &win;
-
 }
 
 Window* Window::stGetWindow(winHandle handle) {
@@ -227,13 +236,13 @@ bool Window::dwmDontRoundCorners(bool flag) {
 //TODO::Return if failure
 void Window::disableTitleBar() {
 	DWORD style = GetWindowLong((HWND)_handle, GWL_STYLE);
-	style &= ~WS_OVERLAPPEDWINDOW;
+	style &= ~_style;
 	WIN_CHECK(SetWindowLong((HWND)_handle, GWL_STYLE, style));
 }
 
 void Window::enableTitleBar() {
 	DWORD style = GetWindowLong((HWND)_handle, GWL_STYLE);
-	style |= WS_OVERLAPPEDWINDOW;
+	style |= _style;
 	WIN_CHECK(SetWindowLong((HWND)_handle, GWL_STYLE, style));
 }
 
