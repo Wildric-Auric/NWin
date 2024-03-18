@@ -12,6 +12,7 @@ namespace NWin {
 typedef void* winHandle;
 typedef void* MsgBuffer;
 typedef void* deviceContextHandle;
+typedef	void* applicationInstance;
 
 typedef void(*procResizeCallback)(winHandle, Vec2 newSize);
 typedef void(*procDrawCallback)(winHandle);
@@ -41,6 +42,7 @@ private:
 	uint64_t  _id					= 0;
 	winHandle _handle				= nullptr;
 	deviceContextHandle _dcHandle	= nullptr;
+	applicationInstance  _instance  = nullptr;
 	MsgBuffer _msgBuff			    = nullptr;
 	bool _shouldLoop			    = 1;
 	Word _style						= 0; //Mainly to enable and disable title bar
@@ -56,6 +58,8 @@ public:
 
 	winHandle			_getHandle();
 	deviceContextHandle _getDcHandle();
+	applicationInstance _getInstance();
+
 	Vec2 getDrawAreaSize();
 	int  update();
 	int  swapBuffers();

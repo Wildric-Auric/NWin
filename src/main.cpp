@@ -45,20 +45,24 @@ void sample() {
 	c.metrics.pos = { 0,0 };
 	c.description = "HelloWorld";
 	c.metrics.size = { 480, 360 };
-	c.style   = WS_OVERLAPPEDWINDOW;
-	c.exStyle = WS_EX_APPWINDOW;
+	c.style   = (NWin::Word)NWin::WindowStyle::Default;
+	c.exStyle = (NWin::Word)NWin::WindowExStyle::Default;
 	w = NWin::Window::stCreateWindow(c);
-	w->setDrawCallback(&draw3);
+
 	w->setResizeCallback(&resize);
 
+	w->dwmDarkModeFrame(1);
+	w->dwmDontRoundCorners(0);
 
-	glInfo.minVersion = 0;
-	glInfo.maxVersion = 0;
-
-	context.create(w, glInfo);
-	context.makeCurrent();
-	//glewInit(); Using glew does not require upgrading opengl to profile..
-	init();
+	//Context------------------
+	//glInfo.minVersion = 3;
+	//glInfo.maxVersion = 3;
+	//context.create(w, glInfo);
+	//context.makeCurrent();
+	//glewInit(); //Using glew does not require upgrading opengl to profile..
+	//init();
+	//w->setDrawCallback(&draw3);
+	//Render Loop--------------
 	while (w->shouldLoop()) { w->update(); }
 	NWin::Window::stDestroyWindow(w);
 	context.makeCurrent(1);

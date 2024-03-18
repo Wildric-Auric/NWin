@@ -140,7 +140,6 @@ NWIN_GL_STATUS GlContext::create(Window* w, const OpenGLInfo& info) {
 }
 
 NWIN_GL_STATUS GlContext::makeCurrent(bool noContext) {
-	auto a = GetLastError();
 	if (noContext) { 
 		wglMakeCurrent(NULL,NULL); GlContext::_current = nullptr; 
 		return NWIN_GL_STATUS::NONE;

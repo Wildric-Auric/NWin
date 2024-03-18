@@ -139,19 +139,16 @@ Window* Window::stCreateWindow(WindowCrtInfo& crtInfo) {
 	//Register and initialize members
 	Window::_windowsMap.emplace(h, Window());
 	Window& win = Window::_windowsMap[h];
+	win._instance =  moduleInstance;
 	win._handle = h;
 	win._msgBuff = new MSG;
 	win._id = _incID;
 	win._dcHandle = GetDC((HWND)h);
 	win._style    = crtInfo.style;
-	auto a = GetLastError();
 	WIN_CHECK(win._dcHandle);
-	a = GetLastError();
-
 	//Set winapi parameterss
 	ShowWindow((HWND)h, SW_SHOWDEFAULT); //Returns false if the window isn't visible already; does not return error directly
 	//WIN_CHECK(SetLayeredWindowAttributes((HWND)h, RGB(255, 0, 0), 100, LWA_ALPHA)); Only if WS_TRANSPARENT is set
-
 	return &win;
 }
 
@@ -174,6 +171,9 @@ deviceContextHandle Window::_getDcHandle() {
 	return _dcHandle;
 }
 
+applicationInstance Window::_getInstance() {
+	return _instance;
+}
 
 Vec2 Window::getDrawAreaSize() {
 	RECT rec{};

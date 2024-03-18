@@ -21,7 +21,8 @@ workspace "NWin"
 	project "Window"
 	includedirs {
 		"src/",
-		"vendor/GLEW/include"
+		"vendor/GLEW/include",
+		"C:/VulkanSDK/1.3.268.0/Include"
 	}
 	files {
 		"src/*.cpp",
@@ -34,6 +35,7 @@ workspace "NWin"
 	}
 	links {
 		"vendor/GLEW/lib/Release/x64/glew32s.lib",
+		"C:/VulkanSDK/1.3.268.0/Lib/Vulkan-1.lib",
 		"opengl32.lib",
 		"gdi32.lib",
 		"glu32.lib",
