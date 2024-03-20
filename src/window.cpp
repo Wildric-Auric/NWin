@@ -255,12 +255,12 @@ static BOOL  getMonitorCallback(
 {
 	std::vector<HMONITOR>* temp = ((std::vector<HMONITOR>*)dwData);
 	temp->push_back(monitorHandle);
-	return 1;
+	return 0;
 };
 
 
 void getMonitor(HDC dcHandle,std::vector<HMONITOR>& outVector) {
-	WIN_CHECK(EnumDisplayMonitors(NULL, NULL, &getMonitorCallback, (LPARAM)&outVector));
+	WIN_CHECK(EnumDisplayMonitors(dcHandle, NULL, &getMonitorCallback, (LPARAM)&outVector));
 }
 
 void Window::enableFullscreen() {
