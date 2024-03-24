@@ -39,13 +39,26 @@ void getWinRect(const Rect& r, RECT& outRect) {
 }
 
 static LONG_PTR CALLBACK defaultWinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+	KeyEvent event;
 	Window* win = Window::stGetWindow((winHandle)hwnd);
 	switch (uMsg)
 	{
+
+		case WM_KEYDOWN:
+			event.key		= (Key)wParam;
+			event.eventType = NWIN_KeyPressed;
+			win->_getKeyboard().record(event);
+			break;
+
+		case WM_KEYUP:
+			event.key = (Key)wParam;
+			event.eventType = NWIN_KeyReleased;
+			win->_getKeyboard().record(event);
+			break;
 		case WM_CREATE: 
 		{
 			RECT rcClient;
-			GetWindowRect(hwnd, &rcClient);
+			GetWindowRect(hwnd, &rcClient);  
 			SetWindowPos(hwnd, NULL, rcClient.left, rcClient.top, rcClient.right - rcClient.left, rcClient.bottom -rcClient.top, SWP_FRAMECHANGED);
 			return 0;
 		}
@@ -127,7 +140,6 @@ Window* Window::stCreateWindow(WindowCrtInfo& crtInfo) {
 	wc.hInstance	 = moduleInstance;
 	wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
 	wc.hCursor	     = LoadCursor(NULL, IDC_ARROW);
-	
 	RegisterClass(&wc);
 
 	getWinRect(crtInfo.metrics, winRect);
@@ -149,6 +161,8 @@ Window* Window::stCreateWindow(WindowCrtInfo& crtInfo) {
 	//Set winapi parameterss
 	ShowWindow((HWND)h, SW_SHOWDEFAULT); //Returns false if the window isn't visible already; does not return error directly
 	//WIN_CHECK(SetLayeredWindowAttributes((HWND)h, RGB(255, 0, 0), 100, LWA_ALPHA)); Only if WS_TRANSPARENT is set
+
+	win._keyboard.create(crtInfo.inputBufferSize);
 	return &win;
 }
 
@@ -159,6 +173,7 @@ Window* Window::stGetWindow(winHandle handle) {
 
 int Window::destroy() {
 	delete _msgBuff;
+	_keyboard.destroy();
 	Window::_windowsMap.erase(_handle);
 	return 1;
 }
@@ -174,6 +189,11 @@ deviceContextHandle Window::_getDcHandle() {
 applicationInstance Window::_getInstance() {
 	return _instance;
 }
+
+Keyboard& Window::_getKeyboard() {
+	return _keyboard;
+}
+
 
 Vec2 Window::getDrawAreaSize() {
 	RECT rec{};

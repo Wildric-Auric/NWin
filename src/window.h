@@ -2,6 +2,7 @@
 #include <cinttypes>
 #include <unordered_map>
 #include "util.h"
+#include "keyboard.h"
 
 
 namespace NWin {
@@ -35,6 +36,7 @@ struct WindowCrtInfo {
 	void* customWindowProcPtr = nullptr;
 	Word  style				  = (Word)WindowStyle::Default;
 	Word  exStyle			  = (Word)WindowExStyle::Default;
+	int   inputBufferSize     = 256;
 };
 
 class Window {
@@ -46,6 +48,8 @@ private:
 	MsgBuffer _msgBuff			    = nullptr;
 	bool _shouldLoop			    = 1;
 	Word _style						= 0; //Mainly to enable and disable title bar
+
+	Keyboard _keyboard;
 
 	static std::unordered_map<winHandle, Window> _windowsMap;
 	static uint64_t _incID;
@@ -59,6 +63,7 @@ public:
 	winHandle			_getHandle();
 	deviceContextHandle _getDcHandle();
 	applicationInstance _getInstance();
+	Keyboard&			_getKeyboard();
 
 	Vec2 getDrawAreaSize();
 	int  update();
@@ -71,7 +76,6 @@ public:
 
 	void enableFullscreen();
 	void disableFullscreen(Rect& newMetrics = defaultWindowMetrics);
-	
 
 	//Callback setters
 	void setResizeCallback(procResizeCallback);
