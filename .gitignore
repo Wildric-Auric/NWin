@@ -1,5 +1,4 @@
 build/
-unitTesting/
 vendor/
 .vs/
 *vcx*
