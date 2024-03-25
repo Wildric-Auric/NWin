@@ -8,7 +8,7 @@
 #include <winres.h>
 #include <dwmapi.h>
 
-typedef LONG_PTR  (*__stdcall win_proc_ptr)(HWND, UINT, WPARAM, LPARAM);
+typedef LRESULT  (CALLBACK* win_proc_ptr)(HWND, UINT, WPARAM, LPARAM);
 
 #define DWMWA_USE_IMMERSIVE_DARK_MODE 20
 #define DWMWA_WINDOW_CORNER_PREFERENCE 33
@@ -38,7 +38,7 @@ void getWinRect(const Rect& r, RECT& outRect) {
 		outRect.left = r.pos.x - r.size.x * 0.5;
 }
 
-static LONG_PTR CALLBACK defaultWinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+static LRESULT CALLBACK defaultWinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	KeyEvent event;
 	Window* win = Window::stGetWindow((winHandle)hwnd);
 	switch (uMsg)
@@ -55,6 +55,7 @@ static LONG_PTR CALLBACK defaultWinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 			event.eventType = NWIN_KeyReleased;
 			win->_getKeyboard().record(event);
 			break;
+
 		case WM_CREATE: 
 		{
 			RECT rcClient;
@@ -67,17 +68,18 @@ static LONG_PTR CALLBACK defaultWinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 			PAINTSTRUCT ps;
 			HDC hdc = BeginPaint(hwnd, &ps);
 			EndPaint(hwnd, &ps);
-			ReleaseDC((HWND)win->_getHandle(), hdc);
+			if (win != nullptr)
+				ReleaseDC((HWND)win->_getHandle(), hdc);
 			return 0;
 		}
 		case WM_SIZE: {
 			if (win == nullptr) return 0;
-			NWIN_CALL_CALL_BACK(win->resizeCallback, (winHandle)hwnd, {0,0}); //Get size from lparam or wparam; read doc
+			NWIN_CALL_CALL_BACK(win->resizeCallback, (winHandle)hwnd, {LOWORD(lParam), HIWORD(lParam)});
 			NWIN_CALL_CALL_BACK(win->drawCallback, (winHandle)hwnd);
 			return 0;
 		};
 		case WM_DESTROY: {
-			Window::stInvalidate(hwnd);
+			Window::stShouldNotUpdate(hwnd);
 			PostQuitMessage(0);
 			return 0;
 		}
@@ -102,8 +104,8 @@ int Window::update() {
 }
 
 int Window::swapBuffers() {
-	//WIN_CHECK21(SwapBuffers((HDC)_dcHandle), return 0;); //Should it work?
-	WIN_CHECK(wglSwapLayerBuffers((HDC)_dcHandle,0)); //TODO::Check this funciton doc
+	//WIN_CHECK21(SwapBuffers((HDC)_dcHandle), return 0;); //Should it work? //Faster than wglSwapLayerBuffers?
+	WIN_CHECK(wglSwapLayerBuffers((HDC)_dcHandle, WGL_SWAP_MAIN_PLANE)); //TODO::Check this funciton doc 
 	return 1;
 }
 
@@ -134,9 +136,7 @@ Window* Window::stCreateWindow(WindowCrtInfo& crtInfo) {
 	std::string tempN = (std::string("_NWin_") + std::to_string(GET_NEW_ID));
 	nameID = tempN.c_str();
 	wc.lpszClassName = nameID;
-	wc.lpfnWndProc = crtInfo.customWindowProcPtr != nullptr ?
-		(win_proc_ptr)(crtInfo.customWindowProcPtr)
-		: &defaultWinProc;
+	wc.lpfnWndProc = crtInfo.customWindowProcPtr != nullptr ? (win_proc_ptr)(crtInfo.customWindowProcPtr) : &defaultWinProc;
 	wc.hInstance	 = moduleInstance;
 	wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
 	wc.hCursor	     = LoadCursor(NULL, IDC_ARROW);
@@ -174,7 +174,6 @@ Window* Window::stGetWindow(winHandle handle) {
 int Window::destroy() {
 	delete _msgBuff;
 	_keyboard.destroy();
-	Window::_windowsMap.erase(_handle);
 	return 1;
 }
 
@@ -203,24 +202,41 @@ Vec2 Window::getDrawAreaSize() {
 
 
 int Window::stDestroyWindow(winHandle handle) {
+	auto iter = Window::_windowsMap.find(handle);
+	if (iter != Window::_windowsMap.end()) {
+		iter->second.destroy();
+	}
+
 	return DestroyWindow((HWND)handle);
 }
 
 int  Window::stDestroyWindow(Window* window) {
-	return Window::stDestroyWindow(window->_handle);
+	HWND handle = (HWND)window->_handle;
+	window->destroy();
+	return DestroyWindow(handle);
 }
 
-bool Window::stInvalidate(winHandle handle) {
+void Window::stShouldNotUpdate(Window* window) {
+		window->_shouldLoop = 0;
+}
+
+void Window::stShouldNotUpdate(winHandle handle) {
+		auto iter = Window::_windowsMap.find(handle);
+		if (iter == _windowsMap.end()) return;
+		iter->second._shouldLoop = 0;
+}
+
+void Window::stClean(winHandle handle) {
 	auto iter = Window::_windowsMap.find(handle);
-	if (iter != Window::_windowsMap.end()) return 0;
-	iter->second._shouldLoop = 0;
-	return 1;
+	if (iter == _windowsMap.end()) return;
+
+	iter->second.destroy();
+	Window::_windowsMap.erase(iter);
 }
 
-bool	Window::stInvalidate(Window* window) {
-	if (window == nullptr) return 0;
-	window->_shouldLoop = 0;
-	return 1;
+void Window::stClean(Window* window) {
+	window->destroy();
+	Window::_windowsMap.erase(window->_handle);
 }
 
 bool Window::dwmBlur() {
@@ -266,7 +282,7 @@ void Window::enableTitleBar() {
 	WIN_CHECK(SetWindowLong((HWND)_handle, GWL_STYLE, style));
 }
 
-static BOOL  getMonitorCallback(
+static BOOL CALLBACK getMonitorCallback(
 	HMONITOR monitorHandle,
 	HDC	   hdc,
 	LPRECT lpRect,

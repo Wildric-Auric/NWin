@@ -25,12 +25,22 @@
 #define WGL_SWAP_METHOD_ARB               0x2007
 #define WGL_SWAP_COPY_ARB                 0x2029
 
-typedef BOOL(WINAPI*  PFNWGLCHOOSEPIXELFORMATARBPROC)    (HDC hdc, const int* piAttribIList, const FLOAT* pfAttribFList, UINT nMaxFormats, int* piFormats, UINT* nNumFormats);
-typedef HGLRC(WINAPI* PFNWGLCREATECONTEXTATTRIBSARBPROC) (HDC hDC, HGLRC hShareContext, const int* attribList);
-typedef BOOL(WINAPI*  PFNWGLSWAPINTERVALEXTPROC)		 (int interval);
+//Extensions strings for getprocaddr
+#define WGL_CHOOSE_PIXEL_FORMAT_ARB_STR "wglChoosePixelFormatARB"
+#define WGL_CREATE_CONTEXT_ATTRIBS_ARB  "wglCreateContextAttribsARB"
+#define WGL_SWAP_INTERVAL_EXT_STR       "wglSwapIntervalEXT"
+#define WGL_GET_SWAP_INTERVAL_EXT_STR   "wglGetSwapIntervalEXT"
+
+typedef BOOL   (WINAPI* PFNWGLCHOOSEPIXELFORMATARBPROC)     (HDC hdc, const int* piAttribIList, const FLOAT* pfAttribFList, UINT nMaxFormats, int* piFormats, UINT* nNumFormats);
+typedef HGLRC  (WINAPI* PFNWGLCREATECONTEXTATTRIBSARBPROC)  (HDC hDC, HGLRC hShareContext, const int* attribList);
+typedef BOOL   (WINAPI* PFNWGLSWAPINTERVALEXTPROC)		    (int interval);
+typedef int    (WINAPI* PFNWGLGETSWAPINTERVALEXTPROC)       (void);
 
 PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = nullptr; //To disable compatibility and select certain OpenGL version only
 PFNWGLCHOOSEPIXELFORMATARBPROC    wglChoosePixelFormatARB    = nullptr;
+
+PFNWGLSWAPINTERVALEXTPROC		  wglSwapIntervalEXT		 = nullptr;
+PFNWGLGETSWAPINTERVALEXTPROC      wglGetSwapIntervalEXT      = nullptr;
 namespace NWin {
 
 
@@ -59,7 +69,7 @@ static void fillpixelFormat(PIXELFORMATDESCRIPTOR& pFormat) {
 	pFormat.nSize = sizeof(PIXELFORMATDESCRIPTOR);
 	pFormat.nVersion = 1;
 	//Other values--------------------
-	pFormat.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;  //PFD_DRAW_TO_BITMAP | PFD_SUPPORT_GDI;
+	pFormat.dwFlags    = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;  //PFD_DRAW_TO_BITMAP | PFD_SUPPORT_GDI;
 	pFormat.iPixelType = PFD_TYPE_RGBA;
 	pFormat.cColorBits = 32;
 	pFormat.cAlphaBits = 8;
@@ -89,21 +99,28 @@ NWIN_GL_STATUS GlContext::create(Window* w, const OpenGLInfo& info) {
 	
 	
 	WIN_CHECK21(pf.choice = ChoosePixelFormat((HDC)window->_getDcHandle(), &pf.pFormat), return NWIN_GL_STATUS::PIXEL_FORMAT_CHOICE_FAILURE);
-	WIN_CHECK21(SetPixelFormat((HDC)window->_getDcHandle(),1,&pf.pFormat),		return NWIN_GL_STATUS::SET_PIXEL_FORMAT_FAILURE);
-	//temp----------------
+	WIN_CHECK21(SetPixelFormat((HDC)window->_getDcHandle(),1,&pf.pFormat),			  	 return NWIN_GL_STATUS::SET_PIXEL_FORMAT_FAILURE);
+
 	WIN_CHECK21(pf.choice = ChoosePixelFormat((HDC)w->_getDcHandle(), &pf.pFormat), return NWIN_GL_STATUS::PIXEL_FORMAT_CHOICE_FAILURE);
 	WIN_CHECK21(SetPixelFormat((HDC)w->_getDcHandle(), 1, &pf.pFormat), return NWIN_GL_STATUS::SET_PIXEL_FORMAT_FAILURE);
-	//--------------------
+
 	WIN_CHECK21(_contextHandle = wglCreateContext((HDC)window->_getDcHandle()), return NWIN_GL_STATUS::CONTEXT_CREATION_FAILURE);
+
+	makeCurrent();
+
+	//Now we have a context, we have to load opengl extension functions---------------------------------------------------
+	WIN_CHECK(wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)wglGetProcAddress(WGL_CREATE_CONTEXT_ATTRIBS_ARB));
+	WIN_CHECK(wglChoosePixelFormatARB	 = (PFNWGLCHOOSEPIXELFORMATARBPROC)wglGetProcAddress(WGL_CHOOSE_PIXEL_FORMAT_ARB_STR));
+	WIN_CHECK(wglGetSwapIntervalEXT		 = (PFNWGLGETSWAPINTERVALEXTPROC)wglGetProcAddress(WGL_GET_SWAP_INTERVAL_EXT_STR));
+	WIN_CHECK(wglSwapIntervalEXT         = (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress(WGL_SWAP_INTERVAL_EXT_STR));
+	//---------------------------------------------------------------------------------------
+
 
 	if (info.maxVersion < FAKE_WIN_MAX_VER) 
 		return NWIN_GL_STATUS::NONE;
 
 	//Next steps are for intialisation of modern opengl and destruction of fake window
-	makeCurrent();
-	WIN_CHECK(wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)wglGetProcAddress("wglCreateContextAttribsARB"));
-	WIN_CHECK(wglChoosePixelFormatARB = (PFNWGLCHOOSEPIXELFORMATARBPROC)wglGetProcAddress("wglChoosePixelFormatARB"));
-
+	
 	int attribs[] = {
 	WGL_CONTEXT_MAJOR_VERSION_ARB, info.minVersion,
 	WGL_CONTEXT_MINOR_VERSION_ARB, info.maxVersion, //fix this to 3 so you can't use opengl comp
@@ -126,7 +143,9 @@ NWIN_GL_STATUS GlContext::create(Window* w, const OpenGLInfo& info) {
 	};
 
 	window = w; //Get back true window
-	Window::stDestroyWindow(_attachedWindow); //Destroy temp window
+	if (info.maxVersion >= FAKE_WIN_MAX_VER) {
+		Window::stDestroyWindow(_attachedWindow); //Destroy temp window
+	}
 	_attachedWindow = window;
 	HGLRC newC;
 	UINT NUM;
@@ -151,5 +170,8 @@ NWIN_GL_STATUS GlContext::makeCurrent(bool noContext) {
 	return NWIN_GL_STATUS::NONE;
 }
 
+void GlContext::setCurCtxVSync(int interval) {
+	WIN_CHECK(wglSwapIntervalEXT(1));
+}
 
 }

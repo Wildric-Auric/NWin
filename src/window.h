@@ -94,16 +94,18 @@ public:
 	//Static---------------------
 	static Window*  stGetWindow(winHandle handle);
 	static Window*	stCreateWindow(WindowCrtInfo& crtInfo);
+
 	static int		stDestroyWindow(winHandle handle);
 	static int      stDestroyWindow(Window* window);
-	static bool		Window::stInvalidate(winHandle handle);
-	static bool		Window::stInvalidate(Window* window);
+
+	static void		stShouldNotUpdate(Window*    window);
+	static void		stShouldNotUpdate(winHandle handle);
+
+	static void		stClean(winHandle handle);
+	static void		stClean(Window* window);
 
 	static Window* _stCreateRawWindow(WindowCrtInfo& crtInfo);
-	/*static bool	stShouldUpdate(Window* window);
-	static bool		stShouldUpdate(winHandle* handle);*/
 	};
-
 }
 
 

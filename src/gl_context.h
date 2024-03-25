@@ -34,8 +34,10 @@ public:
 	NWIN_GL_STATUS	create(Window* window, const OpenGLInfo& glInfo);
 	NWIN_GL_STATUS  makeCurrent(bool noContext = 0);
 	Window*		    getWindow();
+	
 
 	static GlContext* getCurrent();
+	static void setCurCtxVSync(int interval = 1);
 };
 
 };
