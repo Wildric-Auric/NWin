@@ -99,10 +99,8 @@ NWIN_GL_STATUS GlContext::create(Window* w, const OpenGLInfo& info) {
 	
 	
 	WIN_CHECK21(pf.choice = ChoosePixelFormat((HDC)window->_getDcHandle(), &pf.pFormat), return NWIN_GL_STATUS::PIXEL_FORMAT_CHOICE_FAILURE);
-	WIN_CHECK21(SetPixelFormat((HDC)window->_getDcHandle(),1,&pf.pFormat),			  	 return NWIN_GL_STATUS::SET_PIXEL_FORMAT_FAILURE);
+	WIN_CHECK21(SetPixelFormat((HDC)window->_getDcHandle(),pf.choice,&pf.pFormat),	     return NWIN_GL_STATUS::SET_PIXEL_FORMAT_FAILURE);
 
-	WIN_CHECK21(pf.choice = ChoosePixelFormat((HDC)w->_getDcHandle(), &pf.pFormat), return NWIN_GL_STATUS::PIXEL_FORMAT_CHOICE_FAILURE);
-	WIN_CHECK21(SetPixelFormat((HDC)w->_getDcHandle(), 1, &pf.pFormat), return NWIN_GL_STATUS::SET_PIXEL_FORMAT_FAILURE);
 
 	WIN_CHECK21(_contextHandle = wglCreateContext((HDC)window->_getDcHandle()), return NWIN_GL_STATUS::CONTEXT_CREATION_FAILURE);
 
@@ -149,7 +147,11 @@ NWIN_GL_STATUS GlContext::create(Window* w, const OpenGLInfo& info) {
 	_attachedWindow = window;
 	HGLRC newC;
 	UINT NUM;
-	WIN_CHECK(wglChoosePixelFormatARB((HDC)_attachedWindow->_getDcHandle(), pixelAttribs, NULL, 1, &pf.choice, &NUM));
+
+	WIN_CHECK( wglChoosePixelFormatARB((HDC)_attachedWindow->_getDcHandle(), pixelAttribs, 0, 1, &pf.choice, &NUM) );
+	WIN_CHECK21(DescribePixelFormat((HDC)w->_getDcHandle(),pf.choice, sizeof(pf.pFormat), &pf.pFormat), return NWIN_GL_STATUS::PIXEL_FORMAT_CHOICE_FAILURE);
+	WIN_CHECK21(SetPixelFormat((HDC)w->_getDcHandle(), pf.choice, &pf.pFormat), return NWIN_GL_STATUS::SET_PIXEL_FORMAT_FAILURE);
+
 	WIN_CHECK(newC = wglCreateContextAttribsARB((HDC)_attachedWindow->_getDcHandle(), 0, attribs));
 	makeCurrent(1);
 	WIN_CHECK(wglDeleteContext((HGLRC)_contextHandle));

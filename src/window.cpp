@@ -104,8 +104,7 @@ int Window::update() {
 }
 
 int Window::swapBuffers() {
-	//WIN_CHECK21(SwapBuffers((HDC)_dcHandle), return 0;); //Should it work? //Faster than wglSwapLayerBuffers?
-	WIN_CHECK(wglSwapLayerBuffers((HDC)_dcHandle, WGL_SWAP_MAIN_PLANE)); //TODO::Check this funciton doc 
+	WIN_CHECK21(SwapBuffers((HDC)_dcHandle), return 0;);
 	return 1;
 }
 
