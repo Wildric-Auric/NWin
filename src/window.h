@@ -74,6 +74,9 @@ public:
 	void disableTitleBar();
 	void enableTitleBar();
 
+	void setTitle(const char* newTitle);
+	void getTitle(char* title, int buffLen);
+
 	void enableFullscreen();
 	void disableFullscreen(Rect& newMetrics = defaultWindowMetrics);
 

@@ -281,6 +281,14 @@ void Window::enableTitleBar() {
 	WIN_CHECK(SetWindowLong((HWND)_handle, GWL_STYLE, style));
 }
 
+void Window::setTitle(const char* newTitle) {
+	SetWindowText((HWND)_handle,newTitle);
+}
+void Window::getTitle(char* title, int buffLen) {
+	GetWindowText((HWND)_handle, title, buffLen);
+}
+
+
 static BOOL CALLBACK getMonitorCallback(
 	HMONITOR monitorHandle,
 	HDC	   hdc,
