@@ -8,7 +8,7 @@ namespace UnitTesting {
 
 void resize(NWin::winHandle handle, NWin::Vec2 newSize) {
 		//printf("ResizeTest\n");
-	}
+}
 
 void simpleWindow() {
 	NWin::Window* w;
@@ -34,7 +34,7 @@ void simpleWindow() {
 	context.makeCurrent();
 	//Render Loop--------------
 	while (w->shouldLoop()) { w->update(); }
-	NWin::Window::stDestroyWindow(w);
+	NWin::Window::stClean(w);
 	context.makeCurrent(1);
 	}
 };

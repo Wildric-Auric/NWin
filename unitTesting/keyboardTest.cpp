@@ -24,7 +24,7 @@ namespace UnitTesting {
 		NWin::Timer timer;
 		timer.initialize();
 
-		NWin::Key pressTestKey	   = (NWin::Key)('A');
+		NWin::Key pressTestKey	   = NWin::NWIN_KEY_UP;
 		NWin::Key releaseTestKey   = NWin::Key::NWIN_KEY_RIGHT;
 		NWin::Key durationTestKey  = NWin::Key::NWIN_KEY_DOWN;
 		NWin::Key cooldownTestKey  = NWin::Key::NWIN_KEY_LEFT;
@@ -35,6 +35,7 @@ namespace UnitTesting {
 		w->_getKeyboard().setKeyCooldown(cooldownTestKey, cooldownTestTime);
 
 		while (w->shouldLoop()) { 
+			w->_getKeyboard().update();
 			w->update(); 
 			if (w->_getKeyboard().isKeyPressed(pressTestKey) ) {
 				std::cout << " PRESS TEST " << std::endl;
@@ -52,9 +53,8 @@ namespace UnitTesting {
 				std::cout << " COOLDOWN TEST: " << cooldownTestTime << "   CurrentTime: " << timer.getTime() << std::endl;
 			}
 
-			w->_getKeyboard().update();
 		}
 
-		NWin::Window::stDestroyWindow(w);
+		NWin::Window::stClean(w);
 	}
 };
