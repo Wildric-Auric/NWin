@@ -15,7 +15,6 @@ namespace NWin {
 				  "ERROR at file: "  __FILE__  \
 				  "\n\nLine:" TO_STR(__LINE__)  \
 				  "\n\nDuring evaluation of the expression: " #expr "\n\n"); WIN_DISPLAY_ERROR(expr); display("----------------------------\n"); code;} \
-		else { WIN_DISPLAY_ERROR(expr);  }
 
 
 	#define WIN_CHECK2(expr, errorValue) WIN_CHECK_COMPLETE(expr, errorValue,)

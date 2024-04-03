@@ -104,7 +104,7 @@ int Window::update() {
 }
 
 int Window::swapBuffers() {
-	WIN_CHECK21(SwapBuffers((HDC)_dcHandle), return 0;);
+	SwapBuffers((HDC)_dcHandle);
 	return 1;
 }
 
