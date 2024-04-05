@@ -192,11 +192,19 @@ Keyboard& Window::_getKeyboard() {
 	return _keyboard;
 }
 
+void Window::getMousePosition(Vec2& pos) {
+	POINT p;
+	GetCursorPos(&p);
+	ScreenToClient((HWND)_handle, &p);
+	pos.x = p.x;
+	pos.y = p.y;
+}
 
-Vec2 Window::getDrawAreaSize() {
+void Window::getDrawAreaSize(Vec2& size) {
 	RECT rec{};
 	GetClientRect((HWND)_handle, &rec);
-	return Vec2{ rec.right - rec.left, rec.bottom - rec.top,  };
+	size.x = rec.right - rec.left;
+	size.y = rec.bottom - rec.top;
 }
 
 

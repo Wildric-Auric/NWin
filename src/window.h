@@ -65,7 +65,8 @@ public:
 	applicationInstance _getInstance();
 	Keyboard&			_getKeyboard();
 
-	Vec2 getDrawAreaSize();
+	void getDrawAreaSize(Vec2& size);
+	void getMousePosition(Vec2& positon); // Get the mouse position according to client area
 	int  update();
 	int  swapBuffers();
 	int	 destroy();
