@@ -23,7 +23,9 @@ void drawOpenGL3(int sizeX, int sizeY) {
 void drawOpenGL1(NWin::winHandle h) {
 	NWin::Window* win = NWin::Window::stGetWindow(h);
 	glClearColor(0.3, 0.3, 0.3, 0.0);
-	glViewport(0, 0, win->getDrawAreaSize().x, win->getDrawAreaSize().y);
+	NWin::Vec2 size;
+	win->getDrawAreaSize(size);
+	glViewport(0, 0, size.x, size.y);
 	glClear(GL_COLOR_BUFFER_BIT);
 	glBegin(GL_TRIANGLES);
 	glColor3f(1.0f, 0.0f, 0.0f);
@@ -40,7 +42,9 @@ void drawOpenGL1(NWin::winHandle h) {
 
 void drawOpenGL3(NWin::winHandle h) {
 	NWin::Window* win = NWin::Window::stGetWindow(h);
-	drawOpenGL3(win->getDrawAreaSize().x, win->getDrawAreaSize().y);
+	NWin::Vec2 size;
+	win->getDrawAreaSize(size);
+	drawOpenGL3(size.x, size.y);
 	win->swapBuffers();
 }
 

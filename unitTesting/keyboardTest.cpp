@@ -53,6 +53,10 @@ namespace UnitTesting {
 				std::cout << " COOLDOWN TEST: " << cooldownTestTime << "   CurrentTime: " << timer.getTime() << std::endl;
 			}
 
+			NWin::Vec2 p;
+			w->getMousePosition(p);
+			std::cout << p.x << "   " << p.y << std::endl;
+
 		}
 
 		NWin::Window::stClean(w);

@@ -5,9 +5,13 @@
 #include "vulkan_surface.h"
 
 //TODO::
-#define VK_CHECK(expr) expr
+#define VK_CHECK(expr) if ( (expr) == NULL) {return 0;}
+
+static const char* RequiredVKExt[] = { "VK_KHR_surface", "VK_KHR_win32_surface" };
+
 namespace NWin {
 	#define	VK_CREATE_SURFACE_PROC "vkCreateWin32SurfaceKHR"
+
 
 	VulkanResult createSurface(Window* window, void* vkInstanceHandle, void* vkSurfaceOutput, void* allocationCallback) {
 			VkResult res;
@@ -21,8 +25,15 @@ namespace NWin {
 			crtInfo.hwnd      = (HWND)window->_getHandle();
 			crtInfo.pNext     = nullptr;
 			crtInfo.flags     = NULL;
-			res				  = createWin32Surface((VkInstance)vkInstanceHandle, &crtInfo, (const VkAllocationCallbacks*)allocationCallback, (VkSurfaceKHR*)vkSurfaceOutput);
-			VK_CHECK(res != 0);
+			res				  = createWin32Surface((VkInstance)vkInstanceHandle, 
+                                &crtInfo, (const VkAllocationCallbacks*)allocationCallback, 
+                                (VkSurfaceKHR*)vkSurfaceOutput);
+
 			return res;
-		}
+	}
+
+    const char** getRequiredExt() {
+        return RequiredVKExt;    
+    }
 }
+
