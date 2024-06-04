@@ -43,7 +43,7 @@ static LRESULT CALLBACK defaultWinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 	Window* win = Window::stGetWindow((winHandle)hwnd);
 	switch (uMsg)
 	{
-
+		//Inputs------------
 		case WM_KEYDOWN:
 			event.key		= (Key)wParam;
 			event.eventType = NWIN_KeyPressed;
@@ -55,6 +55,31 @@ static LRESULT CALLBACK defaultWinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 			event.eventType = NWIN_KeyReleased;
 			win->_getKeyboard().record(event);
 			break;
+
+		case WM_LBUTTONDOWN:
+			event.key = NWIN_KEY_LBUTTON;
+			event.eventType = NWIN_KeyPressed;
+			win->_getKeyboard().record(event);
+			break;
+
+		case WM_LBUTTONUP:
+			event.key = NWIN_KEY_LBUTTON;
+			event.eventType = NWIN_KeyReleased;
+			win->_getKeyboard().record(event);
+			break;
+
+		case WM_RBUTTONDOWN:
+			event.key = NWIN_KEY_RBUTTON;
+			event.eventType = NWIN_KeyPressed;
+			win->_getKeyboard().record(event);
+			break;
+
+		case WM_RBUTTONUP:
+			event.key = NWIN_KEY_RBUTTON;
+			event.eventType = NWIN_KeyReleased;
+			win->_getKeyboard().record(event);
+			break;
+		//-------------------
 
 		case WM_CREATE: 
 		{

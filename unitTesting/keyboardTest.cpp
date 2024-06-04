@@ -24,8 +24,8 @@ namespace UnitTesting {
 		NWin::Timer timer;
 		timer.initialize();
 
-		NWin::Key pressTestKey	   = NWin::NWIN_KEY_UP;
-		NWin::Key releaseTestKey   = NWin::Key::NWIN_KEY_RIGHT;
+		NWin::Key pressTestKey	   = NWin::Key::NWIN_KEY_LBUTTON;
+		NWin::Key releaseTestKey   = NWin::Key::NWIN_KEY_RBUTTON;
 		NWin::Key durationTestKey  = NWin::Key::NWIN_KEY_DOWN;
 		NWin::Key cooldownTestKey  = NWin::Key::NWIN_KEY_LEFT;
 
@@ -55,7 +55,7 @@ namespace UnitTesting {
 
 			NWin::Vec2 p;
 			w->getMousePosition(p);
-			std::cout << p.x << "   " << p.y << std::endl;
+			//std::cout << p.x << "   " << p.y << std::endl;
 
 		}
 
