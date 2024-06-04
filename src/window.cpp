@@ -38,7 +38,7 @@ void getWinRect(const Rect& r, RECT& outRect) {
 		outRect.left = r.pos.x - r.size.x * 0.5;
 }
 
-static LRESULT CALLBACK defaultWinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK defaultWinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	KeyEvent event;
 	Window* win = Window::stGetWindow((winHandle)hwnd);
 	switch (uMsg)

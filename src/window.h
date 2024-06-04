@@ -30,6 +30,9 @@ enum class WindowExStyle {
 
 extern Rect defaultWindowMetrics;
 
+#ifdef _WINDOWS_ //Windows.h is included
+LRESULT CALLBACK defaultWinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+#endif
 struct WindowCrtInfo {
 	char* description         = nullptr;
 	Rect  metrics{};
