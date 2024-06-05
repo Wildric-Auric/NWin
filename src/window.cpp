@@ -136,12 +136,19 @@ int Window::swapBuffers() {
 void Window::setResizeCallback(procResizeCallback p) {
 	resizeCallback = p;
 }
+
 void Window::setDrawCallback(procDrawCallback p) {
 	drawCallback = p;
 }
+
 void Window::setGdiDrawCallback(procDrawCallback p) {
 	gdiDrawCallback = p;
 }
+
+void Window::setWndProcCallback(void* p) {
+   SetWindowLongPtr((HWND)_handle, GWLP_WNDPROC, (LONG_PTR)p);
+}
+
 
 Window* Window::_stCreateRawWindow(WindowCrtInfo& crtInfo) {
 	return nullptr;

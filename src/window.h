@@ -31,6 +31,7 @@ enum class WindowExStyle {
 extern Rect defaultWindowMetrics;
 
 #ifdef _WINDOWS_ //Windows.h is included
+typedef LRESULT  (CALLBACK* win_proc_ptr)(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK defaultWinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 #endif
 struct WindowCrtInfo {
@@ -88,6 +89,7 @@ public:
 	void setResizeCallback(procResizeCallback);
 	void setDrawCallback(procDrawCallback);
 	void setGdiDrawCallback(procDrawCallback);
+    void setWndProcCallback(void*);
 	//DWM
 	bool dwmBlur();					     //Not working; it should blur the background though
 	bool dwmDarkModeFrame(bool flag);	 //if the flag is set on true, the window uses user's theme for its frame (non client area) color; otherwise, it is white.
