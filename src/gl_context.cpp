@@ -120,8 +120,8 @@ NWIN_GL_STATUS GlContext::create(Window* w, const OpenGLInfo& info) {
 	//Next steps are for intialisation of modern opengl and destruction of fake window
 	
 	int attribs[] = {
-	WGL_CONTEXT_MAJOR_VERSION_ARB, info.minVersion,
-	WGL_CONTEXT_MINOR_VERSION_ARB, info.maxVersion, //fix this to 3 so you can't use opengl comp
+	WGL_CONTEXT_MAJOR_VERSION_ARB, info.maxVersion,
+	WGL_CONTEXT_MINOR_VERSION_ARB, info.minVersion, 
 	WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
 	0x2094, 0x0002, 
 	0 // ,WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB TODO::Define these, it is to disable compatibility
