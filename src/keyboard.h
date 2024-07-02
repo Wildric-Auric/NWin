@@ -20,7 +20,8 @@ struct KeyEvent {
 };
 
 struct KeyMasterData {
-	KeyEventEnum _lastEvent;
+	KeyEventEnum _lastEvent; //Record updates _last event and places _last into _prev
+    KeyEventEnum _prevEvent;
 	timeMl       lastEventTime       = 0;
 	timeMl       hasBeenPressedFor   = 0;
 	timeMl       _cooldownTimeBuffer = 0;
@@ -45,8 +46,10 @@ public:
 		const KeyEventQueue getEventQueue();
 		bool  isEventInQueue(const KeyEvent& event);
 
-		bool isKeyPressed(Key  key);
-		bool isKeyReleased(Key key);
+		bool onKeyPress(Key  key);
+		bool onKeyRelease(Key key);
+
+        bool isKeyPressed(Key key);
 
 		void setKeyCooldown(Key key	,timeMl t);
 		const KeyMasterData* getKeyData(Key key);

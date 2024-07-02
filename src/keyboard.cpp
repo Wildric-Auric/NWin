@@ -45,14 +45,14 @@ namespace NWin {
 			return 0;
 		}
 		//1.Check Cooldown
-		if (kmPair->second._cooldownTimeBuffer > 0) {
+        //Cooldown is possible only for press event for now
+		if (kmPair->second._cooldownTimeBuffer > 0 && event.eventType == NWIN_KeyPressed) {
 			if (kmPair->second._cooldownTime > tDiff ) {
 				kmPair->second._cooldownTimeBuffer = kmPair->second._cooldownTime - tDiff;
 				return 0;
 			}
 			kmPair->second._cooldownTimeBuffer = 0;
 		}
-			
 		//2.Increment pressing event
 		//TODO::Check time of last event too
 		if (kmPair->second._lastEvent == NWIN_KeyPressed 
@@ -60,15 +60,18 @@ namespace NWin {
 			kmPair->second.hasBeenPressedFor += tDiff;
 		}
 		//Set cooldown buffer and press time length
+		auto type = event.eventType;
 		if (event.eventType == NWIN_KeyReleased) {
 			kmPair->second.hasBeenPressedFor = 0;
 		}
-		if (event.eventType == NWIN_KeyPressed) {
+		if (event.eventType == NWIN_KeyPressed && kmPair->second._cooldownTime > 0) {
 			kmPair->second._cooldownTimeBuffer = kmPair->second._cooldownTime;
+			type = NWIN_KeyEventNONE;
 		}
 
 		kmPair->second.lastEventTime      = t;
-		kmPair->second._lastEvent         = event.eventType;
+        kmPair->second._prevEvent         = kmPair->second._lastEvent;
+		kmPair->second._lastEvent         = type;
 		//3.Push event
 		_eventsQueue[_index]	  = event;
 		if (++_index == _length) return 1;
@@ -90,12 +93,19 @@ namespace NWin {
 		return 0;
 	}
 
-	bool Keyboard::isKeyPressed(Key key) {
-		return isEventInQueue({key, NWIN_KeyPressed});
+	bool Keyboard::onKeyPress(Key key) {
+        auto data = keyMaster.find(key);
+        return data != keyMaster.end() && ( data->second._prevEvent != NWIN_KeyPressed ) && isEventInQueue({key, NWIN_KeyPressed});    
 	}
 	
-	bool Keyboard::isKeyReleased(Key key) {
+	bool Keyboard::onKeyRelease(Key key) {
 		return isEventInQueue({key, NWIN_KeyReleased});
+	}
+
+    bool Keyboard::isKeyPressed(Key key) {
+	    auto data = keyMaster.find(key);
+        return data != keyMaster.end() && data->second._lastEvent == NWIN_KeyPressed 
+               && data->second._cooldownTimeBuffer == data->second._cooldownTime;
 	}
 
 	void Keyboard::setKeyCooldown(Key key, timeMl t) {
