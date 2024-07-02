@@ -24,7 +24,7 @@ namespace UnitTesting {
 		NWin::Timer timer;
 		timer.initialize();
 
-		NWin::Key pressTestKey	   = NWin::Key::NWIN_KEY_LBUTTON;
+		NWin::Key pressTestKey	   = NWin::Key::NWIN_KEY_RIGHT;
 		NWin::Key releaseTestKey   = NWin::Key::NWIN_KEY_RBUTTON;
 		NWin::Key durationTestKey  = NWin::Key::NWIN_KEY_DOWN;
 		NWin::Key cooldownTestKey  = NWin::Key::NWIN_KEY_LEFT;
@@ -37,19 +37,27 @@ namespace UnitTesting {
 		while (w->shouldLoop()) { 
 			w->_getKeyboard().update();
 			w->update(); 
+			static bool last = 0;
+			bool current = w->_getKeyboard().isKeyPressed(pressTestKey);
+			if (!current && last) {
+				std::cout << " STOP! " << std::endl;
+			}
+
+			last = current;
+
 			if (w->_getKeyboard().isKeyPressed(pressTestKey) ) {
 				std::cout << " PRESS TEST " << std::endl;
 			}
-			
-			if (w->_getKeyboard().isKeyReleased(releaseTestKey)) {
+	
+			if (w->_getKeyboard().onKeyRelease(releaseTestKey)) {
 				std::cout << " RELEASE TEST " << std::endl;
 			}
-			
-			if (w->_getKeyboard().getKeyPressDuration(durationTestKey) >= durationTestTime) {
+			if (w->_getKeyboard().getKeyData(NWin::NWIN_KEY_DOWN) )
+			if (w->_getKeyboard().getKeyPressDuration(durationTestKey) >= durationTestTime && w->_getKeyboard().getKeyPressDuration(durationTestKey) < durationTestTime + 500) {
 				std::cout << " DURATION TEST: " << durationTestTime << std::endl;
 			}
 
-			if (w->_getKeyboard().isKeyPressed(cooldownTestKey)) {
+			if (w->_getKeyboard().onKeyPress(cooldownTestKey)) {
 				std::cout << " COOLDOWN TEST: " << cooldownTestTime << "   CurrentTime: " << timer.getTime() << std::endl;
 			}
 

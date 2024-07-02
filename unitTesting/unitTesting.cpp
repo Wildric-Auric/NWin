@@ -1,8 +1,8 @@
 #include "unitTesting.h"
+#include <windows.h>
 #include "window.h"
 #include "gl_context.h"
 
-#include<iostream>
 
 namespace UnitTesting {
 
@@ -21,10 +21,10 @@ void simpleWindow() {
 	c.metrics.size = { 480, 360 };
 	c.style = (NWin::Word)NWin::WindowStyle::Default;
 	c.exStyle = (NWin::Word)NWin::WindowExStyle::Default;
+    c.customWindowProcPtr = (void*)NWin::defaultWinProc;
+    
 	w = NWin::Window::stCreateWindow(c);
-
 	w->setResizeCallback(&resize);
-
 	w->dwmDarkModeFrame(1);
 	w->dwmDontRoundCorners(0);
 	//Context------------------
