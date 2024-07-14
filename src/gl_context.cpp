@@ -1,7 +1,6 @@
 #include "gl_context.h"
 #include <Windows.h>
 #include <wingdi.h>
-#include <gl/glew.h>
 #include <GL/GLU.h>
 #include <GL/GL.h>
 
