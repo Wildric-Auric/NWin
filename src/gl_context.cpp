@@ -86,8 +86,9 @@ NWIN_GL_STATUS GlContext::create(Window* w, const OpenGLInfo& info) {
 		NWin::WindowCrtInfo c{};
 		c.metrics.pos = { 0,0 };
 		c.description = "Fake";
-		c.metrics.size = { 480, 360 };
+		c.metrics.size = { 0,0 };
 		window = NWin::Window::stCreateWindow(c);
+		window->disableTitleBar();
 	}
 	else {
 		window = w;
