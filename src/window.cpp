@@ -24,7 +24,7 @@ typedef enum {
 namespace NWin {
 
 
-Rect defaultWindowMetrics = { 0,0,480,360 };
+Rect defaultWindowMetrics = { 100,100,480,360 };
 
 
 uint64_t Window::_incID = 1;
@@ -32,10 +32,10 @@ std::unordered_map<winHandle, Window> Window::_windowsMap;
 
 
 void getWinRect(const Rect& r, RECT& outRect) {
-		outRect.top = r.pos.y + r.size.y * 0.5;
-		outRect.bottom = r.pos.y - r.size.y * 0.5;
-		outRect.right = r.pos.x + r.size.x * 0.5;
-		outRect.left = r.pos.x - r.size.x * 0.5;
+	outRect.left   = r.pos.x;
+	outRect.top    = r.pos.y;
+	outRect.bottom = r.pos.y + r.size.y;
+	outRect.right  = r.pos.x + r.size.x;
 }
 
 LRESULT CALLBACK defaultWinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -174,10 +174,15 @@ Window* Window::stCreateWindow(WindowCrtInfo& crtInfo) {
 	RegisterClass(&wc);
 
 	getWinRect(crtInfo.metrics, winRect);
+
+    if (crtInfo.drawAreaMetrics) {
+		AdjustWindowRect(&winRect, crtInfo.style, false);
+	}
+	
 	WIN_CHECK(h = CreateWindowExA(crtInfo.exStyle,
 		nameID, crtInfo.description,
-		crtInfo.style, crtInfo.metrics.pos.x, crtInfo.metrics.pos.y,
-		crtInfo.metrics.size.x, crtInfo.metrics.size.y, 0, 0, moduleInstance, 0));
+		crtInfo.style, winRect.left, winRect.top,
+		winRect.right - winRect.left, winRect.bottom - winRect.top, 0, 0, moduleInstance, 0));
 	if (!h) return nullptr;
 	//Register and initialize members
 	Window::_windowsMap.emplace(h, Window());

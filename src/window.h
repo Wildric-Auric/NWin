@@ -36,7 +36,8 @@ LRESULT CALLBACK defaultWinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 #endif
 struct WindowCrtInfo {
 	char* description         = nullptr;
-	Rect  metrics{};
+	Rect  metrics             = defaultWindowMetrics;
+	bool  drawAreaMetrics     = true;
 	void* customWindowProcPtr = nullptr;
 	Word  style				  = (Word)WindowStyle::Default;
 	Word  exStyle			  = (Word)WindowExStyle::Default;
