@@ -6,7 +6,6 @@ namespace UnitTesting {
 	void keyboardTest() {
 		NWin::Window* w;
 		NWin::WindowCrtInfo c{};
-		c.metrics.pos = { 0,0 };
 		c.description = "Keyboard Test";
 		c.metrics.size = { 480, 360 };
 		c.style = (NWin::Word)NWin::WindowStyle::Default;

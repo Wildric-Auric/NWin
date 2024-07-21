@@ -16,7 +16,6 @@ void simpleWindow() {
 	NWin::OpenGLInfo glInfo;
 	NWin::GlContext context;
 
-	c.metrics.pos = { 0,0 };
 	c.description = "HelloWorld";
 	c.metrics.size = { 480, 360 };
 	c.style = (NWin::Word)NWin::WindowStyle::Default;

@@ -28,7 +28,8 @@ workspace "NWin"
 		"src/*.cpp",
 		"src/*.h",
 		"src/*.hpp",
-		"premake5.lua"
+		"premake5.lua",
+        "UnitTesting/*.cpp"
 	}
 	defines {
 		"GLEW_STATIC"

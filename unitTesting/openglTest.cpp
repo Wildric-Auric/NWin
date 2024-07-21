@@ -56,9 +56,8 @@ void testOpenGL3Window() {
 	NWin::OpenGLInfo glInfo;
 	NWin::GlContext context;
 
-	c.metrics.pos = { 0,0 };
 	c.description = "HelloWorld";
-	c.metrics.size = { 480, 360 };
+	c.metrics.size     = { 720, 480 };
 	c.style = (NWin::Word)NWin::WindowStyle::Default;
 	c.exStyle = (NWin::Word)NWin::WindowExStyle::Default;
 	w = NWin::Window::stCreateWindow(c);
