@@ -9,7 +9,8 @@
 #include "gl_context.h"
 #include "unitTesting.h"
 // Paint the title on the custom frame.
-extern int init();
+// Init would be a function that initializes and binds VAO and shaders.
+//extern int init();
 namespace UnitTesting {
 
 
@@ -75,7 +76,7 @@ void testOpenGL3Window() {
 	}
 
 	//Render Loop--------------
-	init();
+	//init();
 	while (w->shouldLoop()) { 
 		w->update(); 
 		drawOpenGL3(w->_getHandle()); 
