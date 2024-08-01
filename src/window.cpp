@@ -343,11 +343,13 @@ static BOOL CALLBACK getMonitorCallback(
 {
 	std::vector<HMONITOR>* temp = ((std::vector<HMONITOR>*)dwData);
 	temp->push_back(monitorHandle);
-	return 0;
+	return 1;
 };
 
-
-void getMonitor(HDC dcHandle,std::vector<HMONITOR>& outVector) {
+void getMonitor(HDC dcHandle, std::vector<HMONITOR>& outVector) {
+	//"Success" is when all monitors are are enumerated, if gerMonitorCallback returns 0, 
+	//then EnumDisplayMonitors returns 0
+	//https://github.com/MicrosoftDocs/feedback/issues/1011
 	WIN_CHECK(EnumDisplayMonitors(dcHandle, NULL, &getMonitorCallback, (LPARAM)&outVector));
 }
 
