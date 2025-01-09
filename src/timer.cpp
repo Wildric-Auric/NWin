@@ -2,20 +2,23 @@
 #include <windows.h>
 namespace NWin {
 
-void Timer::initialize() {
-	_beg = GetTickCount64();
-}
+    void Timer::initialize() {
+        _beg = std::chrono::high_resolution_clock::now();
+    }
 
-//Get time recorded at beginning of the frame
-timeMl Timer::getFrameBegTime() {
-	return _current;
-}
+    timeMl Timer::getFrameBegTime() {
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(_current - _beg);
+        return (timeMl)duration.count();
+    }
 
-timeMl Timer::getTime() {
-	return GetTickCount64() - _beg;
-}
+    timeMl Timer::getTime() {
+        update();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(_current - _beg);
+        return (timeMl)duration.count();
+    }
 
-void   Timer::update() {
-	_current = GetTickCount64() - _beg;
-}
+    void Timer::update() {
+        _current = std::chrono::high_resolution_clock::now();
+    }
+
 };
