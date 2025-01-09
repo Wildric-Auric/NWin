@@ -173,7 +173,7 @@ NWIN_GL_STATUS GlContext::makeCurrent(bool noContext) {
 }
 
 void GlContext::setCurCtxVSync(int interval) {
-	WIN_CHECK(wglSwapIntervalEXT(1));
+	WIN_CHECK(wglSwapIntervalEXT(interval));
 }
 
 }
