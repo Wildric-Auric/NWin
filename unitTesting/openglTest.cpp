@@ -7,6 +7,8 @@
 
 #include "window.h"
 #include "gl_context.h"
+
+
 #include "unitTesting.h"
 // Paint the title on the custom frame.
 // Init would be a function that initializes and binds VAO and shaders.
@@ -77,7 +79,15 @@ void testOpenGL3Window() {
 
 	//Render Loop--------------
 	//init();
+	bool fullscreen = 0;
 	while (w->shouldLoop()) { 
+		if (w->_getKeyboard().onKeyPress((NWin::Key)'F')) {
+			w->enableFullscreen();
+		}
+		
+		if (w->_getKeyboard().onKeyPress((NWin::Key)'G')) {
+			w->disableFullscreen();
+		}
 		w->update(); 
 		drawOpenGL3(w->_getHandle()); 
 		context.setCurCtxVSync(1);

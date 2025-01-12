@@ -356,6 +356,7 @@ void getMonitor(HDC dcHandle, std::vector<HMONITOR>& outVector) {
 void Window::enableFullscreen() {
 	std::vector<HMONITOR> outVec;
 	getMonitor((HDC)_dcHandle, outVec);
+	if (outVec.size() <= 0) return;
 	MONITORINFO mInfo;
 	mInfo.cbSize = sizeof(mInfo);
 	WIN_CHECK(GetMonitorInfo(outVec[0], &mInfo));
