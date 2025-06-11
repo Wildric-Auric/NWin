@@ -4,6 +4,8 @@
 namespace NWin {
 
 extern Rect defaultWindowMetrics;
+extern uint32_t defaultWindowsStyle;
+extern uint32_t defaultWindowsExStyle;
 
 typedef void* winHnd;
 typedef void(*procResizeCallback)(winHnd, Vec2 newSize);
@@ -18,6 +20,7 @@ struct WindowsData {
 	deviceContextHandle _dcHandle	= nullptr;
 	applicationInstance _instance   = nullptr;
 	MsgBuffer           _msgBuff	= nullptr;
+    uint32_t            _style      = 0;
 };
 
 typedef void* lxfbConfig;
@@ -45,7 +48,7 @@ class NWindow {
     void getMousePosition(const Vec2&);
     int update();
     int swapBuffers();
-    int destroy();
+    int clean();
 
     void disableTitleBar();
     void enableTitleBar();
@@ -73,14 +76,14 @@ struct WinCrtInfo {
     bool  drawAreaMetrics = true;
     int   inputBufferSize   = 256;
     void* customWindowProc= nullptr;
+    char* description     = nullptr;
     void* next;
 };
 
 NWindow*    GetWin(winHandle handle);
 NWindow*	CreateWin(WinCrtInfo& crtInfo);
-int         DestroyWindow(NWindow* window);
+int         DestroyWin(NWindow* window);
 void		ShouldNotUpdate(NWindow*    window);
-void		CleanWin(NWindow* window);
 
 #ifdef _WINDOWS_
 bool dwmBlur(NWindow*);
