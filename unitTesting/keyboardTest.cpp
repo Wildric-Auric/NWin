@@ -1,17 +1,14 @@
 #include "unitTesting.h"
-#include "window.h"
+#include "nwindow.h"
 #include "timer.h"
 
 namespace UnitTesting {
 	void keyboardTest() {
-		NWin::Window* w;
-		NWin::WindowCrtInfo c{};
+		NWin::NWindow* w;
+		NWin::WinCrtInfo c{};
 		c.description = "Keyboard Test";
 		c.metrics.size = { 480, 360 };
-		c.style = (NWin::Word)NWin::WindowStyle::Default;
-		c.exStyle = (NWin::Word)NWin::WindowExStyle::Default;
-		w = NWin::Window::stCreateWindow(c);
-		w->dwmDarkModeFrame(1);
+		w = NWin::CreateWin(c);
 		//Render Loop--------------
 		/*
 
@@ -31,32 +28,32 @@ namespace UnitTesting {
 		NWin::timeMl    durationTestTime = 1000;
 		NWin::timeMl    cooldownTestTime = 2000;
 
-		w->_getKeyboard().setKeyCooldown(cooldownTestKey, cooldownTestTime);
+		w->getKeyboard().setKeyCooldown(cooldownTestKey, cooldownTestTime);
 
-		while (w->shouldLoop()) { 
-			w->_getKeyboard().update();
+		while (w->_shouldLoop) { 
+			w->getKeyboard().update();
 			w->update(); 
 			static bool last = 0;
-			bool current = w->_getKeyboard().isKeyPressed(pressTestKey);
+			bool current = w->getKeyboard().isKeyPressed(pressTestKey);
 			if (!current && last) {
 				std::cout << " STOP! " << std::endl;
 			}
 
 			last = current;
 
-			if (w->_getKeyboard().isKeyPressed(pressTestKey) ) {
+			if (w->getKeyboard().isKeyPressed(pressTestKey) ) {
 				std::cout << " PRESS TEST " << std::endl;
 			}
-	
-			if (w->_getKeyboard().onKeyRelease(releaseTestKey)) {
+
+			if (w->getKeyboard().onKeyRelease(releaseTestKey)) {
 				std::cout << " RELEASE TEST " << std::endl;
 			}
-			if (w->_getKeyboard().getKeyData(NWin::NWIN_KEY_DOWN) )
-			if (w->_getKeyboard().getKeyPressDuration(durationTestKey) >= durationTestTime && w->_getKeyboard().getKeyPressDuration(durationTestKey) < durationTestTime + 500) {
+			if (w->getKeyboard().getKeyData(NWin::NWIN_KEY_DOWN) )
+			if (w->getKeyboard().getKeyPressDuration(durationTestKey) >= durationTestTime && w->getKeyboard().getKeyPressDuration(durationTestKey) < durationTestTime + 500) {
 				std::cout << " DURATION TEST: " << durationTestTime << std::endl;
 			}
 
-			if (w->_getKeyboard().onKeyPress(cooldownTestKey)) {
+			if (w->getKeyboard().onKeyPress(cooldownTestKey)) {
 				std::cout << " COOLDOWN TEST: " << cooldownTestTime << "   CurrentTime: " << timer.getTime() << std::endl;
 			}
 
@@ -66,6 +63,6 @@ namespace UnitTesting {
 
 		}
 
-		NWin::Window::stClean(w);
+        NWin::DestroyWin(w);
 	}
 };

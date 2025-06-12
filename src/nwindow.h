@@ -1,3 +1,4 @@
+#pragma once
 #include "util.h"
 #include "keyboard.h"
 
@@ -16,6 +17,7 @@ typedef void* winHandle;
 typedef void* MsgBuffer;
 typedef void* deviceContextHandle;
 typedef	void* applicationInstance;
+
 struct WindowsData {	
 	deviceContextHandle _dcHandle	= nullptr;
 	applicationInstance _instance   = nullptr;
@@ -39,13 +41,13 @@ struct PlatformData {
 
 class NWindow {
     public:
-    NWindow(); 
+    NWindow()                            = default; 
 	NWindow(NWindow&& other)			 = default;
-	NWindow(const NWindow&)		     = delete;
-	NWindow& operator=(const NWindow&) = delete;
+	NWindow(const NWindow&)		         = delete;
+	NWindow& operator=(const NWindow&)   = delete;
 
-    void getDrawAreaSize(const Vec2&);
-    void getMousePosition(const Vec2&);
+    void getDrawAreaSize(Vec2&);
+    void getMousePosition(Vec2&);
     int update();
     int swapBuffers();
     int clean();
@@ -56,6 +58,7 @@ class NWindow {
     void getTitle(char*, int cap);
     void enableFullScreen();
     void disableFullscreen(Rect& = defaultWindowMetrics);
+    inline bool shouldLoop() {return _shouldLoop;}
 
     inline void      setResizeCallback(procResizeCallback proc) {_resizeCallback = proc;}
     inline void      setDrawCallback(procDrawCallback proc) {_drawCallback = proc;}
@@ -67,7 +70,7 @@ class NWindow {
 	procResizeCallback _resizeCallback  = nullptr;
 	procDrawCallback   _drawCallback	= nullptr;
     Keyboard _keyboard;
-    PlatformData _data; 
+    PlatformData _data = {}; 
 };
 
 struct WinCrtInfo {
@@ -79,6 +82,9 @@ struct WinCrtInfo {
     char* description     = nullptr;
     void* next;
 };
+
+void SetWinProcCallback(NWindow*,void*);
+
 
 NWindow*    GetWin(winHandle handle);
 NWindow*	CreateWin(WinCrtInfo& crtInfo);

@@ -93,14 +93,17 @@ LRESULT CALLBACK defaultWinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 uint32_t _incID = 1;
 #define GET_NEW_ID (_incID++)
 
+struct CrtInfoWindowsExtra {
+    uint32_t style;
+    uint32_t exStyle;
+};
+
 uint32_t defaultWindowsStyle = (0x00000000L | 0x00C00000L | 0x00080000L | 0x00040000L | 0x00020000L | 0x00010000L);
 uint32_t defaultWindowsExStyle = 0x00040000L;
 
 Rect defaultWindowMetrics = { 100,100,480,360 };
 
-
 std::unordered_map<winHandle, NWindow> windowsMap;
-
 
 NWindow* GetWin(winHandle handle) {
     auto iter = windowsMap.find(handle);
@@ -108,10 +111,135 @@ NWindow* GetWin(winHandle handle) {
     return &iter->second;
 }
 
-struct CrtInfoWindowsExtra {
-    uint32_t style;
-    uint32_t exStyle;
+//-------------------------------------
+int NWindow::update() {
+    #ifdef NW_PLATFORM_WINDOWS
+    LPMSG msg = (LPMSG)_data.win._msgBuff;
+	while (PeekMessage(msg, 0, 0, 0, PM_NOREMOVE)) {
+		_shouldLoop = GetMessage(msg, 0, 0, 0);
+		TranslateMessage(msg);
+		DispatchMessage(msg);
+	}
+	NWIN_CALL_CALL_BACK(_drawCallback, (winHandle)_handle)
+	return 1;
+    #endif
+    return 0;
+}
+
+int NWindow::swapBuffers() {
+    #ifdef NW_PLATFORM_WINDOWS
+	SwapBuffers((HDC)_data.win._dcHandle);
+	return 1;
+    #endif
+	return 0;
+}
+
+void SetWinProcCallback(NWindow* w,void* p) {
+    #ifdef NW_PLATFORM_WINDOWS
+    SetWindowLongPtr((HWND)(w->_handle), GWLP_WNDPROC, (LONG_PTR)p);
+    #endif
+}
+
+int NWindow::clean() {
+    #ifdef NW_PLATFORM_WINDOWS
+	delete ((MSG*)_data.win._msgBuff);
+	_keyboard.destroy();
+    #endif
+    return 1;
+}
+
+
+void NWindow::getMousePosition(Vec2& pos) {
+    #ifdef NW_PLATFORM_WINDOWS
+	POINT p;
+	GetCursorPos(&p);
+	ScreenToClient((HWND)_handle, &p);
+	pos.x = p.x;
+	pos.y = p.y;
+    #endif
+}
+
+void NWindow::getDrawAreaSize(Vec2& size) {
+    #ifdef NW_PLATFORM_WINDOWS
+	RECT rec{};
+	GetClientRect((HWND)_handle, &rec);
+	size.x = rec.right - rec.left;
+	size.y = rec.bottom - rec.top;
+    #endif
+}
+
+void NWindow::disableTitleBar() {
+    #ifdef NW_PLATFORM_WINDOWS
+	DWORD style = GetWindowLong((HWND)_handle, GWL_STYLE);
+	style &= ~_data.win._style;
+	WIN_CHECK(SetWindowLong((HWND)_handle, GWL_STYLE, style));
+    #endif
+}
+
+void NWindow::enableTitleBar() {
+    #ifdef NW_PLATFORM_WINDOWS
+	DWORD style = GetWindowLong((HWND)_handle, GWL_STYLE);
+	style |= _data.win._style;
+	WIN_CHECK(SetWindowLong((HWND)_handle, GWL_STYLE, style));
+    #endif
+}
+
+void NWindow::setTitle(const char* newTitle) {
+    #ifdef NW_PLATFORM_WINDOWS
+	SetWindowText((HWND)_handle,newTitle);
+    #endif
+}
+void NWindow::getTitle(char* title, int buffLen) {
+    #ifdef NW_PLATFORM_WINDOWS
+	GetWindowText((HWND)_handle, title, buffLen);
+    #endif
+}
+
+#ifdef NW_PLATFORM_WINDOWS
+static BOOL CALLBACK getMonitorCallback(
+	HMONITOR monitorHandle,
+	HDC	   hdc,
+	LPRECT lpRect,
+	LPARAM dwData
+)
+{
+	std::vector<HMONITOR>* temp = ((std::vector<HMONITOR>*)dwData);
+	temp->push_back(monitorHandle);
+	return 1;
 };
+
+void getMonitor(HDC dcHandle, std::vector<HMONITOR>& outVector) {
+	//"Success" is when all monitors are are enumerated, if gerMonitorCallback returns 0, 
+	//then EnumDisplayMonitors returns 0
+	//https://github.com/MicrosoftDocs/feedback/issues/1011
+	WIN_CHECK(EnumDisplayMonitors(dcHandle, NULL, &getMonitorCallback, (LPARAM)&outVector));
+}
+#endif
+
+void NWindow::enableFullScreen() {
+    #ifdef NW_PLATFORM_WINDOWS
+	std::vector<HMONITOR> outVec;
+	getMonitor((HDC)_data.win._dcHandle, outVec);
+	if (outVec.size() <= 0) return;
+	MONITORINFO mInfo;
+	mInfo.cbSize = sizeof(mInfo);
+	WIN_CHECK(GetMonitorInfo(outVec[0], &mInfo));
+	Vec2 size = { mInfo.rcMonitor.right - mInfo.rcMonitor.left, mInfo.rcMonitor.bottom - mInfo.rcMonitor.top };
+	WIN_CHECK(SetWindowPos((HWND)_handle, NULL, 0, 0, size.x, size.y, 0));
+	disableTitleBar();
+    #endif
+}
+
+void NWindow::disableFullscreen(Rect& newMetrics) {
+    #ifdef NW_PLATFORM_WINDOWS
+	enableTitleBar();
+	WIN_CHECK(SetWindowPos((HWND)_handle, NULL, newMetrics.pos.x, newMetrics.pos.y, newMetrics.size.x, newMetrics.size.y, 0));
+    #endif
+}
+
+//-------------------------------------
+
+
 
 NWindow* PltWinCreateWin(WinCrtInfo& crtInfo) {
 	NWindow* win = 0; 
@@ -169,20 +297,19 @@ NWindow* PltWinCreateWin(WinCrtInfo& crtInfo) {
 
 NWindow* PltLnxCreateWin(WinCrtInfo& crtInfo) {
     NWindow* win = 0;
-#ifndef NW_PLATFORM_WINDOWS
+    #ifndef NW_PLATFORM_WINDOWS
     
-#endif
+    #endif
     return win;
 }
 
-
 NWindow*    CreateWin(WinCrtInfo& crtInfo) {
 	NWindow* win = 0; 
-#ifdef NW_PLATFORM_WINDOWS
+    #ifdef NW_PLATFORM_WINDOWS
     win = PltWinCreateWin(crtInfo);
-#else
+    #else
     win = PltLnxCreateWin(crtInfo);
-#endif
+    #endif
 	return win;
 };
 
